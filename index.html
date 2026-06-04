@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Helios Protocol — Self-Driving RWA Treasury on Casper</title>
+<meta name="description" content="Helios Protocol: a self-driving treasury for tokenized real-world assets on Casper, run by a swarm of accountable AI agents." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#05060f;
+  --bg2:#0a0b1c;
+  --panel:rgba(255,255,255,0.035);
+  --panel-strong:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.09);
+  --border-glow:rgba(255,178,39,0.35);
+  --text:#eef1ff;
+  --muted:#9aa3c7;
+  --dim:#5e6892;
+  --red:#ff2e4c;
+  --gold:#ffb627;
+  --gold2:#ffd166;
+  --cyan:#22d3ee;
+  --green:#34e0a1;
+  --violet:#8b7bff;
+  --r:18px;
+  --shadow:0 20px 60px -20px rgba(0,0,0,0.7);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+}
+#bg-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.bg-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(900px 600px at 80% -10%, rgba(255,46,76,0.18), transparent 60%),
+    radial-gradient(800px 700px at 10% 10%, rgba(139,123,255,0.16), transparent 55%),
+    radial-gradient(1000px 800px at 50% 120%, rgba(255,182,39,0.12), transparent 55%);
+}
+.noise{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.wrap{position:relative;z-index:3;max-width:1240px;margin:0 auto;padding:0 22px}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 0;backdrop-filter:blur(14px);}
+nav::after{content:"";position:absolute;left:-50vw;right:-50vw;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+.brand{display:flex;align-items:center;gap:12px;font-family:'Space Grotesk';font-weight:700;font-size:19px;letter-spacing:-0.02em}
+.sun{width:34px;height:34px;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 35% 35%,var(--gold2),var(--gold) 45%,var(--red) 120%);
+  box-shadow:0 0 24px rgba(255,182,39,0.7),0 0 50px rgba(255,46,76,0.4);animation:pulse 3.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 22px rgba(255,182,39,0.6),0 0 45px rgba(255,46,76,0.35)}50%{box-shadow:0 0 34px rgba(255,182,39,0.95),0 0 70px rgba(255,46,76,0.55)}}
+.nav-links{display:flex;gap:30px;font-size:14px;color:var(--muted)}
+.nav-links a{color:var(--muted);text-decoration:none;transition:.2s}
+.nav-links a:hover{color:var(--text)}
+.btn{font-family:'Space Grotesk';font-weight:600;font-size:14px;cursor:pointer;border:none;
+  padding:11px 20px;border-radius:12px;color:#16060a;
+  background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,var(--red));
+  box-shadow:0 8px 24px -6px rgba(255,80,80,0.55);transition:transform .2s, box-shadow .2s;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px -6px rgba(255,80,80,0.7)}
+.btn.ghost{background:var(--panel-strong);color:var(--text);border:1px solid var(--border);box-shadow:none}
+.btn.ghost:hover{border-color:var(--border-glow)}
+@media(max-width:760px){.nav-links{display:none}}
+
+/* HERO */
+.hero{padding:74px 0 30px;text-align:center;position:relative}
+.pill{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;letter-spacing:.04em;
+  padding:7px 15px;border-radius:100px;border:1px solid var(--border);background:var(--panel);color:var(--muted);margin-bottom:26px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(52,224,161,.6);animation:live 1.8s infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(52,224,161,.55)}70%{box-shadow:0 0 0 9px rgba(52,224,161,0)}100%{box-shadow:0 0 0 0 rgba(52,224,161,0)}}
+.hero h1{font-family:'Space Grotesk';font-weight:700;font-size:clamp(38px,6.4vw,74px);line-height:1.02;letter-spacing:-0.03em;margin-bottom:22px}
+.grad{background:linear-gradient(110deg,var(--gold2),var(--gold) 30%,var(--red) 65%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{max-width:660px;margin:0 auto 34px;color:var(--muted);font-size:clamp(15px,2vw,18px)}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.tag-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+.tag{font-family:'JetBrains Mono';font-size:11.5px;color:var(--dim);border:1px solid var(--border);border-radius:8px;padding:6px 11px;background:rgba(255,255,255,0.02)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:54px 0 16px}
+@media(max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent)}
+.stat{padding:22px}
+.stat .lab{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.stat .val{font-family:'Space Grotesk';font-weight:700;font-size:30px;letter-spacing:-0.02em}
+.stat .sub{font-size:12px;margin-top:6px;color:var(--dim)}
+.up{color:var(--green)}.dn{color:var(--red)}
+.ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:14px;
+  background:rgba(255,182,39,.12);border:1px solid rgba(255,182,39,.22)}
+
+/* SECTION */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin:50px 0 18px}
+.sec-head h2{font-family:'Space Grotesk';font-weight:600;font-size:22px;letter-spacing:-0.01em;display:flex;align-items:center;gap:10px}
+.sec-head .hint{font-size:12.5px;color:var(--dim)}
+
+.grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+/* AGENT SWARM */
+.agents{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:20px}
+@media(max-width:520px){.agents{grid-template-columns:1fr}}
+.agent{background:var(--panel-strong);border:1px solid var(--border);border-radius:14px;padding:16px;transition:.25s;position:relative}
+.agent:hover{border-color:var(--border-glow);transform:translateY(-3px)}
+.agent .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.agent .em{font-size:22px}
+.agent .nm{font-family:'Space Grotesk';font-weight:600;font-size:15px}
+.agent .role{font-size:12px;color:var(--muted);min-height:32px}
+.badge{font-size:10.5px;font-weight:600;font-family:'JetBrains Mono';padding:4px 9px;border-radius:7px;display:inline-flex;align-items:center;gap:6px}
+.badge.on{color:var(--green);background:rgba(52,224,161,.12);border:1px solid rgba(52,224,161,.25)}
+.mini-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:live 1.6s infinite}
+.rep{margin-top:12px}
+.rep .row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
+.track{height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
+.fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--red));width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+
+/* ALLOCATION */
+.alloc{padding:22px;display:flex;gap:24px;align-items:center}
+@media(max-width:520px){.alloc{flex-direction:column}}
+.donut{width:170px;height:170px;border-radius:50%;flex-shrink:0;position:relative;
+  background:conic-gradient(var(--gold) 0% 42%,var(--cyan) 42% 67%,var(--violet) 67% 86%,var(--red) 86% 100%);
+  -webkit-mask:radial-gradient(transparent 54%,#000 55%);mask:radial-gradient(transparent 54%,#000 55%)}
+.donut-wrap{position:relative;display:grid;place-items:center}
+.donut-center{position:absolute;text-align:center}
+.donut-center .big{font-family:'Space Grotesk';font-weight:700;font-size:26px}
+.donut-center .sm{font-size:11px;color:var(--muted)}
+.legend{flex:1;display:flex;flex-direction:column;gap:12px;min-width:160px}
+.leg{display:flex;align-items:center;gap:11px;font-size:13.5px}
+.leg .d{width:11px;height:11px;border-radius:4px}
+.leg .pct{margin-left:auto;font-family:'JetBrains Mono';color:var(--muted);font-size:12.5px}
+
+/* ACTIVITY LOG */
+.log{padding:8px 0;max-height:340px;overflow:hidden}
+.log-item{display:flex;gap:13px;padding:12px 22px;border-bottom:1px solid rgba(255,255,255,.05);animation:slidein .5s ease}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+.log-ic{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:grid;place-items:center;font-size:14px}
+.log-body{flex:1;min-width:0}
+.log-body .t{font-size:13.5px;font-weight:500}
+.log-body .m{font-size:12px;color:var(--dim);font-family:'JetBrains Mono';margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-time{font-size:11px;color:var(--dim);font-family:'JetBrains Mono';white-space:nowrap}
+.t-gold{background:rgba(255,182,39,.13);color:var(--gold)}
+.t-cyan{background:rgba(34,211,238,.13);color:var(--cyan)}
+.t-green{background:rgba(52,224,161,.13);color:var(--green)}
+.t-violet{background:rgba(139,123,255,.13);color:var(--violet)}
+
+/* X402 TICKER */
+.ticker{margin:18px 0;padding:14px 20px;border-radius:14px;border:1px solid var(--border);background:var(--panel);
+  display:flex;align-items:center;gap:16px;font-family:'JetBrains Mono';font-size:13px;overflow:hidden}
+.ticker .label{color:var(--gold);font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.ticker-track{flex:1;overflow:hidden;mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.ticker-move{display:flex;gap:42px;white-space:nowrap;animation:scroll 26s linear infinite;color:var(--muted)}
+.ticker-move span b{color:var(--green)}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* FOOTER */
+footer{margin:70px 0 50px;text-align:center;color:var(--dim);font-size:13px}
+footer .fbrand{font-family:'Space Grotesk';color:var(--muted);font-weight:600;margin-bottom:8px}
+footer a{color:var(--gold);text-decoration:none}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="bg-overlay"></div>
+<div class="noise"></div>
+
+<div class="wrap">
+  <nav>
+    <div class="brand"><span class="sun"></span> Helios<span style="color:var(--gold)">.</span></div>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#swarm">Agent Swarm</a>
+      <a href="#activity">Activity</a>
+      <a href="https://github.com/Artem1981777/Helios-Protocol" target="_blank">GitHub</a>
+    </div>
+    <button class="btn" id="connectBtn">⬡ Connect Wallet</button>
+  </nav>
+
+  <section class="hero">
+    <span class="pill"><span class="live-dot"></span> SWARM ACTIVE · CASPER TESTNET</span>
+    <h1>The self-driving treasury<br/>for <span class="grad">tokenized real-world assets</span></h1>
+    <p>Set your risk policy in plain language. A swarm of accountable AI agents monitors yield, buys verified data via x402, and rebalances on-chain — with a fully provable audit trail on Casper.</p>
+    <div class="hero-cta">
+      <button class="btn" id="launchBtn">Launch App →</button>
+      <a class="btn ghost" href="#activity">Watch the swarm</a>
+    </div>
+    <div class="tag-row">
+      <span class="tag">x402 micropayments</span>
+      <span class="tag">MCP servers</span>
+      <span class="tag">CSPR.click skill</span>
+      <span class="tag">Odra contracts</span>
+      <span class="tag">CSPR.cloud</span>
+    </div>
+  </section>
+
+  <section id="overview">
+    <div class="stats">
+      <div class="card stat reveal">
+        <div class="lab"><span class="ic">◈</span> Total Value Managed</div>
+        <div class="val">$<span class="count" data-to="2480000" data-dec="0">0</span></div>
+        <div class="sub"><span class="up">▲ 4.2%</span> last 24h</div>
+      </div>
+      <div class="card stat reveal">
+        <div class="lab"><span class="ic">⊹</span> Blended APY</div>
+        <div class="val"><span class="count" data-to="11.8" data-dec="1">0</span>%</div>
+        <div class="sub"><span class="up">▲ 0.6%</span> optimized by swarm</div>
+      </div>
+      <div class="card stat reveal">
+        <div class="lab"><span class="ic">⛨</span> Portfolio Risk Score</div>
+        <div class="val"><span class="count" data-to="82" data-dec="0">0</span><span style="font-size:18px;color:var(--dim)">/100</span></div>
+        <div class="sub">within policy bounds</div>
+      </div>
+      <div class="card stat reveal">
+        <div class="lab"><span class="ic">⬡</span> Active Agents</div>
+        <div class="val"><span class="count" data-to="4" data-dec="0">0</span></div>
+        <div class="sub"><span class="up">● all online</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="swarm">
+    <div class="sec-head"><h2>🛰️ Agent Swarm</h2><span class="hint">specialized · accountable · on-chain reputation</span></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="agents">
+          <div class="agent reveal">
+            <div class="top"><span class="em">🧠</span><span class="badge on"><span class="mini-dot"></span>RUNNING</span></div>
+            <div class="nm">Orchestrator</div>
+            <div class="role">Parses your policy, coordinates the swarm.</div>
+            <div class="rep"><div class="row"><span>Reputation</span><span>98</span></div><div class="track"><div class="fill" data-w="98"></div></div></div>
+          </div>
+          <div class="agent reveal">
+            <div class="top"><span class="em">🔭</span><span class="badge on"><span class="mini-dot"></span>SCANNING</span></div>
+            <div class="nm">Yield Scout</div>
+            <div class="role">Finds RWA yields via MCP + CSPR.cloud.</div>
+            <div class="rep"><div class="row"><span>Reputation</span><span>91</span></div><div class="track"><div class="fill" data-w="91"></div></div></div>
+          </div>
+          <div class="agent reveal">
+            <div class="top"><span class="em">🛡️</span><span class="badge on"><span class="mini-dot"></span>VERIFYING</span></div>
+            <div class="nm">Risk Oracle</div>
+            <div class="role">Buys verified data via x402, posts proofs on-chain.</div>
+            <div class="rep"><div class="row"><span>Reputation</span><span>87</span></div><div class="track"><div class="fill" data-w="87"></div></div></div>
+          </div>
+          <div class="agent reveal">
+            <div class="top"><span class="em">⚙️</span><span class="badge on"><span class="mini-dot"></span>READY</span></div>
+            <div class="nm">Execution</div>
+            <div class="role">Signs &amp; submits rebalances via CSPR.click.</div>
+            <div class="rep"><div class="row"><span>Reputation</span><span>94</span></div><div class="track"><div class="fill" data-w="94"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="alloc">
+          <div class="donut-wrap">
+            <div class="donut"></div>
+            <div class="donut-center"><div class="big">$2.48M</div><div class="sm">allocated</div></div>
+          </div>
+          <div class="legend">
+            <div class="leg"><span class="d" style="background:var(--gold)"></span> T-Bill Vault (A+)<span class="pct">42%</span></div>
+            <div class="leg"><span class="d" style="background:var(--cyan)"></span> Tokenized Invoices<span class="pct">25%</span></div>
+            <div class="leg"><span class="d" style="background:var(--violet)"></span> RWA Credit Pool<span class="pct">19%</span></div>
+            <div class="leg"><span class="d" style="background:var(--red)"></span> Liquid CSPR buffer<span class="pct">14%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker">
+    <span class="label">⚡ x402</span>
+    <div class="ticker-track"><div class="ticker-move" id="tick"></div></div>
+  </div>
+
+  <section id="activity">
+    <div class="sec-head"><h2>📡 Live Agent Activity</h2><span class="hint">streaming from Casper Testnet</span></div>
+    <div class="card"><div class="log" id="log"></div></div>
+  </section>
+
+  <footer>
+    <div class="fbrand">🌞 Helios Protocol</div>
+    <div>Built for the Casper Agentic Buildathon 2026 · <a href="https://github.com/Artem1981777/Helios-Protocol" target="_blank">GitHub</a> · Testnet demo</div>
+  </footer>
+</div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+/* ---------- 3D BACKGROUND: agent swarm orbiting the protocol core ---------- */
+const canvas=document.getElementById('bg-canvas');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,100);
+camera.position.set(0,0,16);
+
+function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
+resize();addEventListener('resize',resize);
+
+const core=new THREE.Group();scene.add(core);
+// glowing wireframe icosahedron = protocol core
+const ico=new THREE.Mesh(
+  new THREE.IcosahedronGeometry(3.4,1),
+  new THREE.MeshBasicMaterial({color:0xffb627,wireframe:true,transparent:true,opacity:0.32})
+);
+core.add(ico);
+const icoInner=new THREE.Mesh(
+  new THREE.IcosahedronGeometry(2.2,0),
+  new THREE.MeshBasicMaterial({color:0xff2e4c,wireframe:true,transparent:true,opacity:0.5})
+);
+core.add(icoInner);
+
+// orbiting agent nodes
+const agentColors=[0xffb627,0x22d3ee,0x8b7bff,0x34e0a1];
+const orbits=[];
+agentColors.forEach((c,i)=>{
+  const g=new THREE.Group();
+  const node=new THREE.Mesh(new THREE.SphereGeometry(0.28,18,18),new THREE.MeshBasicMaterial({color:c}));
+  const halo=new THREE.Mesh(new THREE.SphereGeometry(0.55,18,18),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0.18}));
+  const radius=6.0+i*0.9;
+  node.position.x=radius;halo.position.x=radius;
+  g.add(node);g.add(halo);
+  g.rotation.x=i*0.7;g.rotation.z=i*0.5;
+  scene.add(g);
+  orbits.push({g,speed:0.22-i*0.03});
+});
+
+// starfield particles
+const pts=2200;const pos=new Float32Array(pts*3);
+for(let i=0;i<pts;i++){const r=18+Math.random()*26;const th=Math.random()*Math.PI*2;const ph=Math.acos(2*Math.random()-1);
+  pos[i*3]=r*Math.sin(ph)*Math.cos(th);pos[i*3+1]=r*Math.sin(ph)*Math.sin(th);pos[i*3+2]=r*Math.cos(ph);}
+const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+const stars=new THREE.Points(pg,new THREE.PointsMaterial({color:0x9aa3c7,size:0.06,transparent:true,opacity:0.6}));
+scene.add(stars);
+
+let mx=0,my=0;
+addEventListener('pointermove',e=>{mx=(e.clientX/innerWidth-0.5);my=(e.clientY/innerHeight-0.5);});
+const clock=new THREE.Clock();
+function animate(){
+  const t=clock.getElapsedTime();
+  core.rotation.y=t*0.18;core.rotation.x=t*0.09;
+  icoInner.rotation.y=-t*0.3;
+  orbits.forEach(o=>{o.g.rotation.y+=o.speed*0.016;});
+  stars.rotation.y=t*0.02;
+  camera.position.x+= (mx*3-camera.position.x)*0.04;
+  camera.position.y+= (-my*3-camera.position.y)*0.04;
+  camera.lookAt(0,0,0);
+  renderer.render(scene,camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* ---------- animated counters ---------- */
+function runCounters(){
+  document.querySelectorAll('.count').forEach(el=>{
+    const to=parseFloat(el.dataset.to),dec=parseInt(el.dataset.dec);const dur=1600;const st=performance.now();
+    function step(now){let p=Math.min((now-st)/dur,1);p=1-Math.pow(1-p,3);
+      const v=to*p;el.textContent=dec?v.toFixed(dec):Math.round(v).toLocaleString('en-US');
+      if(p<1)requestAnimationFrame(step);}
+    requestAnimationFrame(step);
+  });
+}
+
+/* ---------- reveal on scroll + fills ---------- */
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.2});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+setTimeout(()=>{document.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%');},500);
+setTimeout(runCounters,300);
+
+/* ---------- live activity log ---------- */
+const events=[
+  {ic:'🔭',t:'t-cyan',title:'Yield Scout found higher APY',m:'OndoT-Bill pool · 12.4% APY · via Casper MCP'},
+  {ic:'🛡️',t:'t-gold',title:'Risk Oracle purchased verified data',m:'x402 paid 0.0021 CSPR · proof 0x9f3a…e1'},
+  {ic:'🛡️',t:'t-gold',title:'Risk score published on-chain',m:'AuditOracle.publish() · score 87 · tx 0x4c…a2'},
+  {ic:'🧠',t:'t-violet',title:'Orchestrator built rebalance plan',m:'within policy: max risk 70+, min 60% A-rated'},
+  {ic:'⚙️',t:'t-green',title:'Execution rebalanced the Vault',m:'Vault.rebalance() · +3.1% APY · tx 0x71…d9'},
+  {ic:'🔭',t:'t-cyan',title:'Yield Scout scanning protocols',m:'7 RWA pools monitored on Casper Testnet'},
+  {ic:'🛡️',t:'t-gold',title:'Reputation updated by accuracy',m:'Risk Oracle +0.4 · forecast confirmed'},
+  {ic:'⚙️',t:'t-green',title:'Compliance buffer maintained',m:'14% liquid CSPR · policy satisfied'}
+];
+const log=document.getElementById('log');let ei=0;
+function now(){const d=new Date();return d.toTimeString().slice(0,8);}
+function addLog(){
+  const e=events[ei%events.length];ei++;
+  const div=document.createElement('div');div.className='log-item';
+  div.innerHTML=`<div class="log-ic ${e.t}">${e.ic}</div><div class="log-body"><div class="t">${e.title}</div><div class="m">${e.m}</div></div><div class="log-time">${now()}</div>`;
+  log.prepend(div);
+  while(log.children.length>7)log.removeChild(log.lastChild);
+}
+for(let i=0;i<5;i++)addLog();
+setInterval(addLog,2600);
+
+/* ---------- x402 ticker ---------- */
+const feeds=['Risk Oracle → DataProvider  <b>0.0021 CSPR</b>','Scout → PoolFeed  <b>0.0008 CSPR</b>','Oracle → RatingAPI  <b>0.0034 CSPR</b>','Agent → CSPR.cloud  <b>0.0012 CSPR</b>','Risk Oracle → KYCFeed  <b>0.0026 CSPR</b>'];
+const tick=document.getElementById('tick');
+tick.innerHTML=[...feeds,...feeds].map(f=>`<span>⚡ ${f}</span>`).join('');
+
+/* ---------- wallet button (demo) ---------- */
+function fakeConnect(btn){btn.textContent='⬡ 0x7a…C4e9';btn.style.background='var(--panel-strong)';btn.style.color='var(--text)';btn.style.border='1px solid var(--border-glow)';}
+document.getElementById('connectBtn').onclick=e=>fakeConnect(e.currentTarget);
+document.getElementById('launchBtn').onclick=()=>document.getElementById('overview').scrollIntoView({behavior:'smooth'});
+</script>
+</body>
+</html>
