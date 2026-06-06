@@ -9,6 +9,8 @@
 //!   ODRA_CASPER_LIVENET_ENV=casper-test cargo run --bin helios_vault_on_livenet --features livenet
 
 use helios_vault::HeliosVault;
+use odra::prelude::Addressable;
+use odra::host::HostRef;
 use odra::casper_types::U512;
 use odra::host::{Deployer, NoArgs};
 
