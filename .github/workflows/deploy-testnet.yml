@@ -2,6 +2,13 @@ name: Deploy HeliosVault (Testnet)
 
 on:
   workflow_dispatch:
+    inputs:
+      node_address:
+        description: "Casper Testnet node RPC base URL"
+        default: "http://52.35.59.254:7777"
+      events_url:
+        description: "Casper Testnet node SSE events URL"
+        default: "http://52.35.59.254:9999/events"
 
 jobs:
   deploy:
@@ -33,6 +40,8 @@ jobs:
         env:
           CASPER_SECRET_KEY_B64: $ secrets.CASPER_SECRET_KEY_B64 
           CSPR_CLOUD_AUTH_TOKEN: $ secrets.CSPR_CLOUD_AUTH_TOKEN 
+          NODE_ADDRESS: $ inputs.node_address 
+          EVENTS_URL: $ inputs.events_url 
         run: |
           set -euo pipefail
           if [ -z "${CASPER_SECRET_KEY_B64:-}" ]; then echo "Missing secret CASPER_SECRET_KEY_B64"; exit 1; fi
@@ -40,10 +49,12 @@ jobs:
           echo "$CASPER_SECRET_KEY_B64" | base64 -d > keys/secret_key.pem
           {
             echo "ODRA_CASPER_LIVENET_SECRET_KEY_PATH=./keys/secret_key.pem"
-            echo "ODRA_CASPER_LIVENET_NODE_ADDRESS=https://node.testnet.cspr.cloud"
-            echo "ODRA_CASPER_LIVENET_EVENTS_URL=https://node.testnet.cspr.cloud/events"
+            echo "ODRA_CASPER_LIVENET_NODE_ADDRESS=${NODE_ADDRESS}"
+            echo "ODRA_CASPER_LIVENET_EVENTS_URL=${EVENTS_URL}"
             echo "ODRA_CASPER_LIVENET_CHAIN_NAME=casper-test"
             echo "CSPR_CLOUD_AUTH_TOKEN=${CSPR_CLOUD_AUTH_TOKEN:-}"
           } > casper-test.env
+          echo "---- casper-test.env (token hidden) ----"
+          grep -v CSPR_CLOUD_AUTH_TOKEN casper-test.env
       - name: Deploy + smoke test (on-chain)
         run: ODRA_CASPER_LIVENET_ENV=casper-test cargo run --bin helios_vault_on_livenet --features livenet
