@@ -1,0 +1,6 @@
+# Casper contracts import host functions (casper_revert, casper_get_named_arg, ...)
+# from the Casper VM at runtime; they are not defined inside the wasm itself.
+# Tell wasm-ld to keep these undefined symbols as wasm imports instead of erroring.
+# Scoped to the wasm target only, so host-side `cargo odra test` is unaffected.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--allow-undefined"]
