@@ -38,10 +38,10 @@ jobs:
         run: cargo odra build || echo "::warning::wasm-opt non-zero; .wasm already emitted, continuing"
       - name: Write secret key + livenet env
         env:
-          CASPER_SECRET_KEY_B64: $ secrets.CASPER_SECRET_KEY_B64 
-          CSPR_CLOUD_AUTH_TOKEN: $ secrets.CSPR_CLOUD_AUTH_TOKEN 
-          NODE_ADDRESS: $ inputs.node_address 
-          EVENTS_URL: $ inputs.events_url 
+          CASPER_SECRET_KEY_B64: ${{ secrets.CASPER_SECRET_KEY_B64 }} 
+          CSPR_CLOUD_AUTH_TOKEN: ${{ secrets.CSPR_CLOUD_AUTH_TOKEN }} 
+          NODE_ADDRESS: ${{ inputs.node_address }} 
+          EVENTS_URL: ${{ inputs.events_url }} 
         run: |
           set -euo pipefail
           if [ -z "${CASPER_SECRET_KEY_B64:-}" ]; then echo "Missing secret CASPER_SECRET_KEY_B64"; exit 1; fi
