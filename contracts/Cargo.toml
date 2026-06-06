@@ -21,12 +21,12 @@ livenet = ["dep:odra-casper-livenet-env"]
 
 # Standard Odra build helpers driven by `cargo odra build` / `cargo odra schema`.
 [[bin]]
-name = "build_contract"
+name = "helios_vault_build_contract"
 path = "bins/build_contract.rs"
 test = false
 
 [[bin]]
-name = "build_schema"
+name = "helios_vault_build_schema"
 path = "bins/build_schema.rs"
 test = false
 
