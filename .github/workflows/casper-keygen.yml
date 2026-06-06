@@ -1,0 +1,30 @@
+name: Casper keygen (Testnet)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  keygen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+      - name: System deps for casper-client
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
+      - name: Install casper-client
+        run: cargo install casper-client --locked
+      - name: Generate keypair
+        run: |
+          set -euo pipefail
+          mkdir -p keys
+          casper-client keygen ./keys
+          echo ""
+          echo "============= PUBLIC KEY (fund at faucet) ============="
+          cat ./keys/public_key_hex
+          echo ""
+          echo "============= SECRET KEY base64 (-> repo secret) ======"
+          echo "Copy the single line below into secret CASPER_SECRET_KEY_B64:"
+          echo ""
+          base64 -w0 ./keys/secret_key.pem
+          echo ""
+          echo "======================================================="
