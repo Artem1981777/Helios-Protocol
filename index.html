@@ -406,7 +406,7 @@ tick.innerHTML=[...feeds,...feeds].map(f=>`<span>⚡ ${f}</span>`).join('');
 /* ---------- wallet button (demo) ---------- */
 function fakeConnect(btn){btn.textContent='⬡ 0x7a…C4e9';btn.style.background='var(--panel-strong)';btn.style.color='var(--text)';btn.style.border='1px solid var(--border-glow)';}
 document.getElementById('connectBtn').onclick=e=>fakeConnect(e.currentTarget);
-document.getElementById('launchBtn').onclick=()=>document.getElementById('overview').scrollIntoView({behavior:'smooth'});
+document.getElementById('launchBtn').onclick=()=>{location.href='/app';};
 </script>
 </body>
 </html>

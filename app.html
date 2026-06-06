@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Helios Protocol — App</title>
+<meta name="description" content="Helios Protocol App: set your risk policy in plain language and let the agent swarm manage your RWA treasury on Casper." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#05060f;--panel:rgba(255,255,255,0.035);--panel-strong:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.09);--border-glow:rgba(255,178,39,0.4);
+  --text:#eef1ff;--muted:#9aa3c7;--dim:#5e6892;
+  --red:#ff2e4c;--gold:#ffb627;--gold2:#ffd166;--cyan:#22d3ee;--green:#34e0a1;--violet:#8b7bff;
+  --r:18px;--shadow:0 20px 60px -20px rgba(0,0,0,0.7);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5;min-height:100vh;overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(800px 600px at 85% -5%,rgba(255,46,76,0.16),transparent 60%),
+   radial-gradient(700px 600px at 5% 0%,rgba(139,123,255,0.16),transparent 55%),
+   radial-gradient(900px 700px at 50% 115%,rgba(255,182,39,0.12),transparent 55%);}
+.bg::after{content:"";position:absolute;inset:0;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.wrap{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:0 20px 70px}
+nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:15px 0;backdrop-filter:blur(14px)}
+nav::after{content:"";position:absolute;left:-50vw;right:-50vw;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+.brand{display:flex;align-items:center;gap:11px;font-family:'Space Grotesk';font-weight:700;font-size:18px;letter-spacing:-0.02em;text-decoration:none;color:var(--text)}
+.sun{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--gold2),var(--gold) 45%,var(--red) 120%);box-shadow:0 0 22px rgba(255,182,39,.65),0 0 44px rgba(255,46,76,.4);animation:pulse 3.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 20px rgba(255,182,39,.55),0 0 40px rgba(255,46,76,.32)}50%{box-shadow:0 0 32px rgba(255,182,39,.9),0 0 64px rgba(255,46,76,.5)}}
+.nav-right{display:flex;align-items:center;gap:12px}
+.netpill{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:100px;padding:6px 12px;display:flex;align-items:center;gap:7px}
+.gd{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(52,224,161,.6);animation:live 1.8s infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(52,224,161,.55)}70%{box-shadow:0 0 0 8px rgba(52,224,161,0)}100%{box-shadow:0 0 0 0 rgba(52,224,161,0)}}
+.btn{font-family:'Space Grotesk';font-weight:600;font-size:14px;cursor:pointer;border:none;padding:11px 18px;border-radius:12px;color:#16060a;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,var(--red));box-shadow:0 8px 24px -6px rgba(255,80,80,.55);transition:transform .2s,box-shadow .2s;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px -6px rgba(255,80,80,.7)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.ghost{background:var(--panel-strong);color:var(--text);border:1px solid var(--border);box-shadow:none}
+.btn.ghost:hover{border-color:var(--border-glow)}
+.btn.sm{padding:8px 14px;font-size:13px;border-radius:10px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(16px);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent)}
+h1.title{font-family:'Space Grotesk';font-weight:700;font-size:clamp(26px,5vw,40px);letter-spacing:-0.025em;margin:26px 0 6px}
+.sub{color:var(--muted);font-size:15px;margin-bottom:24px;max-width:640px}
+.grad{background:linear-gradient(110deg,var(--gold2),var(--gold) 35%,var(--red) 70%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.step-flag{font-family:'JetBrains Mono';font-size:11px;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.step-flag .n{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;background:rgba(255,182,39,.14);border:1px solid rgba(255,182,39,.3);font-weight:700}
+.sec{padding:22px}
+.sec h2{font-family:'Space Grotesk';font-weight:600;font-size:18px;margin-bottom:4px}
+.sec .desc{color:var(--muted);font-size:13px;margin-bottom:16px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:840px){.cols{grid-template-columns:1fr}}
+.field{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Inter';font-size:14px;padding:13px 14px;resize:vertical;transition:border .2s}
+.field:focus{outline:none;border-color:var(--border-glow)}
+textarea.field{min-height:96px;line-height:1.55}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{font-size:12px;color:var(--muted);border:1px solid var(--border);background:rgba(255,255,255,.02);border-radius:100px;padding:6px 12px;cursor:pointer;transition:.2s}
+.chip:hover{border-color:var(--border-glow);color:var(--text)}
+.constraints{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.constraint{display:flex;align-items:center;gap:11px;font-size:13.5px;padding:11px 13px;border-radius:11px;background:var(--panel-strong);border:1px solid var(--border);animation:slidein .4s ease}
+@keyframes slidein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.constraint .ck{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:rgba(52,224,161,.14);color:var(--green);flex-shrink:0;font-size:12px}
+.constraint b{font-family:'JetBrains Mono';color:var(--gold2);font-weight:500}
+.muted-note{color:var(--dim);font-size:12.5px;font-style:italic;margin-top:8px}
+.depbar{display:flex;gap:10px;align-items:center;margin-top:6px}
+.depbar .field{flex:1}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:6px 0 0}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{padding:18px}
+.stat .lab{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;gap:6px;align-items:center}
+.stat .val{font-family:'Space Grotesk';font-weight:700;font-size:26px;letter-spacing:-0.02em}
+.stat .sub2{font-size:11.5px;margin-top:5px;color:var(--dim)}
+.up{color:var(--green)}
+.grid-main{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}
+@media(max-width:900px){.grid-main{grid-template-columns:1fr}}
+.alloc{display:flex;gap:22px;align-items:center;padding:22px}
+@media(max-width:480px){.alloc{flex-direction:column}}
+.donut-wrap{position:relative;display:grid;place-items:center;flex-shrink:0}
+.donut{width:158px;height:158px;border-radius:50%;-webkit-mask:radial-gradient(transparent 54%,#000 55%);mask:radial-gradient(transparent 54%,#000 55%);transition:background .8s ease}
+.donut-c{position:absolute;text-align:center}
+.donut-c .big{font-family:'Space Grotesk';font-weight:700;font-size:22px}
+.donut-c .sm{font-size:10.5px;color:var(--muted)}
+.legend{flex:1;display:flex;flex-direction:column;gap:11px;min-width:150px}
+.leg{display:flex;align-items:center;gap:10px;font-size:13px}
+.leg .d{width:10px;height:10px;border-radius:4px}
+.leg .pct{margin-left:auto;font-family:'JetBrains Mono';color:var(--muted);font-size:12px}
+.agents{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px}
+@media(max-width:480px){.agents{grid-template-columns:1fr}}
+.agent{background:var(--panel-strong);border:1px solid var(--border);border-radius:13px;padding:14px}
+.agent .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.agent .em{font-size:19px}
+.agent .nm{font-family:'Space Grotesk';font-weight:600;font-size:14px}
+.agent .role{font-size:11.5px;color:var(--muted);min-height:30px}
+.badge{font-size:10px;font-weight:600;font-family:'JetBrains Mono';padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;color:var(--green);background:rgba(52,224,161,.12);border:1px solid rgba(52,224,161,.25)}
+.md{width:6px;height:6px;border-radius:50%;background:var(--green);animation:live 1.6s infinite}
+.log{max-height:300px;overflow:hidden}
+.log-item{display:flex;gap:12px;padding:11px 20px;border-bottom:1px solid rgba(255,255,255,.05);animation:slidein .45s ease}
+.log-ic{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:grid;place-items:center;font-size:13px}
+.log-b{flex:1;min-width:0}
+.log-b .t{font-size:13px;font-weight:500}
+.log-b .m{font-size:11.5px;color:var(--dim);font-family:'JetBrains Mono';margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-time{font-size:10.5px;color:var(--dim);font-family:'JetBrains Mono';white-space:nowrap}
+.t-gold{background:rgba(255,182,39,.13);color:var(--gold)}.t-cyan{background:rgba(34,211,238,.13);color:var(--cyan)}.t-green{background:rgba(52,224,161,.13);color:var(--green)}.t-violet{background:rgba(139,123,255,.13);color:var(--violet)}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0}
+.sec-head h3{font-family:'Space Grotesk';font-weight:600;font-size:15px;display:flex;gap:8px;align-items:center}
+.sec-head .hint{font-size:11px;color:var(--dim)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120px);z-index:100;background:#0c0e22;border:1px solid var(--border-glow);border-radius:14px;padding:13px 18px;display:flex;gap:11px;align-items:center;box-shadow:0 20px 50px -10px rgba(0,0,0,.8);transition:transform .4s cubic-bezier(.2,.9,.2,1);max-width:92vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast .ti{font-size:18px}
+.toast a{color:var(--gold);font-family:'JetBrains Mono';font-size:12px;text-decoration:none;border-bottom:1px dashed var(--gold)}
+.locked{opacity:.4;pointer-events:none;filter:grayscale(.4)}
+.dim-step{transition:opacity .4s}
+.rebalance-row{display:flex;gap:10px;align-items:center;padding:0 20px 18px;flex-wrap:wrap}
+.policy-saved{font-size:12px;color:var(--green);display:none;align-items:center;gap:6px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="/"><span class="sun"></span> Helios<span style="color:var(--gold)">.</span></a>
+    <div class="nav-right">
+      <span class="netpill"><span class="gd"></span> Casper Testnet</span>
+      <button class="btn" id="connectBtn">⬡ Connect Wallet</button>
+    </div>
+  </nav>
+
+  <h1 class="title">Your <span class="grad">self-driving</span> RWA treasury</h1>
+  <p class="sub">Connect your wallet, describe your risk appetite in plain language, and deposit. The agent swarm takes over — monitoring yield, verifying data via x402, and rebalancing on-chain.</p>
+
+  <!-- STEP 1+2: policy -->
+  <div class="card sec dim-step" id="policyCard" style="margin-bottom:16px">
+    <div class="step-flag"><span class="n">1</span> Define your policy</div>
+    <h2>Tell Helios how to manage your capital</h2>
+    <div class="desc">Write it like you'd tell a portfolio manager. Helios parses it into on-chain guardrails.</div>
+    <div class="cols">
+      <div>
+        <textarea class="field" id="policyInput" placeholder="e.g. Keep at least 60% in low-risk A-rated RWA, maximize yield, never enter pools with a risk score below 70, and rebalance no more than once a day."></textarea>
+        <div class="chips">
+          <span class="chip" data-fill="Keep at least 60% in A-rated RWA, maximize yield, min risk score 70, rebalance once a day.">🛡️ Conservative</span>
+          <span class="chip" data-fill="Balance yield and safety: 40% A-rated minimum, accept risk score 60+, rebalance twice a day.">⚖️ Balanced</span>
+          <span class="chip" data-fill="Maximize APY aggressively, allow risk score 50+, keep only 10% buffer, rebalance hourly.">🚀 Aggressive</span>
+        </div>
+        <button class="btn ghost sm" id="parseBtn" style="margin-top:14px">✨ Parse with AI →</button>
+        <div class="policy-saved" id="policySaved">✓ Policy committed to PolicyManager on-chain</div>
+      </div>
+      <div>
+        <div class="step-flag"><span class="n">2</span> Parsed constraints</div>
+        <div class="constraints" id="constraints">
+          <div class="muted-note">Your structured guardrails will appear here after parsing.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: deposit -->
+  <div class="card sec dim-step locked" id="depositCard" style="margin-bottom:16px">
+    <div class="step-flag"><span class="n">3</span> Fund the vault</div>
+    <h2>Deposit into HeliosVault</h2>
+    <div class="desc">Testnet CSPR. This is your first on-chain transaction — the swarm activates right after.</div>
+    <div class="depbar">
+      <input class="field" id="depInput" type="number" placeholder="Amount in CSPR (e.g. 5000)" value="5000" />
+      <button class="btn" id="depBtn">Deposit →</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dim-step locked" id="dash">
+    <div class="stats">
+      <div class="card stat"><div class="lab">◈ Total Value Managed</div><div class="val">$<span id="tvm">0</span></div><div class="sub2" id="tvmSub">awaiting deposit</div></div>
+      <div class="card stat"><div class="lab">⊹ Blended APY</div><div class="val"><span id="apy">0.0</span>%</div><div class="sub2"><span class="up" id="apyTrend">—</span></div></div>
+      <div class="card stat"><div class="lab">⛨ Risk Score</div><div class="val"><span id="risk">—</span><span style="font-size:15px;color:var(--dim)">/100</span></div><div class="sub2">within policy</div></div>
+      <div class="card stat"><div class="lab">⬡ Rebalances</div><div class="val"><span id="rebs">0</span></div><div class="sub2">on Casper Testnet</div></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="card">
+        <div class="sec-head"><h3>🛰️ Agent Swarm</h3><span class="hint">on-chain reputation</span></div>
+        <div class="agents">
+          <div class="agent"><div class="top"><span class="em">🧠</span><span class="badge"><span class="md"></span>RUNNING</span></div><div class="nm">Orchestrator</div><div class="role">Parses policy, coordinates swarm.</div></div>
+          <div class="agent"><div class="top"><span class="em">🔭</span><span class="badge"><span class="md"></span>SCANNING</span></div><div class="nm">Yield Scout</div><div class="role">Finds RWA yields via MCP.</div></div>
+          <div class="agent"><div class="top"><span class="em">🛡️</span><span class="badge"><span class="md"></span>VERIFYING</span></div><div class="nm">Risk Oracle</div><div class="role">Buys data via x402, posts proofs.</div></div>
+          <div class="agent"><div class="top"><span class="em">⚙️</span><span class="badge"><span class="md"></span>READY</span></div><div class="nm">Execution</div><div class="role">Signs &amp; submits rebalances.</div></div>
+        </div>
+        <div class="rebalance-row">
+          <button class="btn" id="cycleBtn">⚡ Run swarm cycle</button>
+          <span class="hint" id="cycleHint">Triggers a full scout → verify (x402) → rebalance loop.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-head"><h3>🧩 Allocation</h3><span class="hint">RWA basket</span></div>
+        <div class="alloc">
+          <div class="donut-wrap"><div class="donut" id="donut"></div><div class="donut-c"><div class="big" id="donutVal">$0</div><div class="sm">allocated</div></div></div>
+          <div class="legend">
+            <div class="leg"><span class="d" style="background:var(--gold)"></span> T-Bill Vault (A+)<span class="pct" id="a0">42%</span></div>
+            <div class="leg"><span class="d" style="background:var(--cyan)"></span> Tokenized Invoices<span class="pct" id="a1">25%</span></div>
+            <div class="leg"><span class="d" style="background:var(--violet)"></span> RWA Credit Pool<span class="pct" id="a2">19%</span></div>
+            <div class="leg"><span class="d" style="background:var(--red)"></span> Liquid CSPR buffer<span class="pct" id="a3">14%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="sec-head"><h3>📡 Live Agent Activity</h3><span class="hint">streaming from Testnet</span></div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="ti">✅</span><div><div id="toastT" style="font-size:13.5px;font-weight:600">Done</div><div id="toastM" style="font-size:12px;color:var(--muted)"></div></div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+let connected=false, deposited=false, tvm=0, apy=0, risk=82, rebs=0;
+const alloc=[42,25,19,14];
+function txHash(){const h='0123456789abcdef';let s='0x';for(let i=0;i<6;i++)s+=h[Math.floor(Math.random()*16)];return s+'…'+h[Math.floor(Math.random()*16)]+h[Math.floor(Math.random()*16)];}
+function now(){return new Date().toTimeString().slice(0,8);}
+function toast(t,m,link){$('toastT').textContent=t;$('toastM').innerHTML=m+(link?` · <a href="#" onclick="return false">view tx</a>`:'');$('toast').classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>$('toast').classList.remove('show'),3800);}
+
+/* wallet */
+$('connectBtn').onclick=()=>{
+  if(connected)return;
+  $('connectBtn').textContent='⬡ 0x7a…C4e9';
+  $('connectBtn').style.background='var(--panel-strong)';$('connectBtn').style.color='var(--text)';$('connectBtn').style.border='1px solid var(--border-glow)';
+  connected=true;toast('Wallet connected','CSPR.click · Testnet account 0x7a…C4e9');
+};
+
+/* policy chips */
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{$('policyInput').value=c.dataset.fill;});
+
+/* parse policy -> constraints (demo heuristic) */
+$('parseBtn').onclick=()=>{
+  const txt=$('policyInput').value.toLowerCase();
+  if(!txt.trim()){toast('⚠️ Empty policy','Describe your risk appetite first.');return;}
+  const cons=[];
+  const aRated=(txt.match(/(\d{1,3})\s*%/)||[])[1];
+  cons.push({l:'Minimum A-rated allocation',v:(aRated?aRated:'60')+'%'});
+  const rs=(txt.match(/(?:score|risk)[^\d]*(\d{2,3})/)||[])[1];
+  cons.push({l:'Minimum pool risk score',v:(rs?rs:'70')+'/100'});
+  let freq='1× / day';
+  if(txt.includes('hour'))freq='hourly';else if(txt.includes('twice'))freq='2× / day';else if(txt.includes('week'))freq='1× / week';
+  cons.push({l:'Max rebalance frequency',v:freq});
+  let goal='Maximize risk-adjusted yield';
+  if(txt.includes('aggressive')||txt.includes('maximize apy'))goal='Maximize APY (aggressive)';else if(txt.includes('balance'))goal='Balance yield & safety';
+  cons.push({l:'Objective',v:goal});
+  const box=$('constraints');box.innerHTML='';
+  cons.forEach((c,i)=>{setTimeout(()=>{const d=document.createElement('div');d.className='constraint';d.innerHTML=`<span class="ck">✓</span><span>${c.l}: <b>${c.v}</b></span>`;box.appendChild(d);},i*160);});
+  setTimeout(()=>{$('policySaved').style.display='flex';$('depositCard').classList.remove('locked');toast('Policy parsed ✓','4 guardrails committed to PolicyManager',true);},cons.length*160+200);
+};
+
+/* deposit */
+$('depBtn').onclick=()=>{
+  if(!connected){toast('⚠️ Connect wallet','Connect your wallet to deposit.');return;}
+  const amt=parseFloat($('depInput').value)||0;
+  if(amt<=0){toast('⚠️ Invalid amount','Enter a CSPR amount.');return;}
+  tvm+=amt*1.0;deposited=true;apy=11.8;rebs=0;
+  $('dash').classList.remove('locked');
+  render();animateTo('tvm',tvm,0);$('tvmSub').textContent='managed by swarm';$('apyTrend').textContent='▲ live';
+  $('risk').textContent=risk;
+  toast('Deposit confirmed','Vault.deposit() · +'+amt.toLocaleString()+' CSPR · tx '+txHash(),true);
+  pushLog('🧠','t-violet','Orchestrator activated','policy loaded · swarm online');
+  startStream();
+};
+
+/* swarm cycle */
+let cycling=false;
+$('cycleBtn').onclick=async()=>{
+  if(!deposited){toast('⚠️ No funds','Deposit into the vault first.');return;}
+  if(cycling)return;cycling=true;$('cycleBtn').disabled=true;
+  const steps=[
+    ['🔭','t-cyan','Yield Scout found higher APY','OndoT-Bill · 12.7% · via Casper MCP'],
+    ['🛡️','t-gold','Risk Oracle bought verified data','x402 paid 0.0021 CSPR · proof '+txHash()],
+    ['🛡️','t-gold','Risk score published on-chain','AuditOracle.publish() · score '+(risk)+' · tx '+txHash()],
+    ['⚙️','t-green','Execution rebalanced the Vault','Vault.rebalance() · tx '+txHash()],
+  ];
+  for(let i=0;i<steps.length;i++){await new Promise(r=>setTimeout(r,700));pushLog(...steps[i]);}
+  // shift allocations a bit, bump apy & rebs
+  apy=Math.min(15.5,apy+ (Math.random()*0.9+0.3));rebs++;risk=Math.max(74,Math.min(90,risk+(Math.random()*6-3)|0));
+  alloc[0]=Math.max(35,Math.min(50,alloc[0]+(Math.random()*6-3)|0));
+  const rest=100-alloc[0];alloc[1]=Math.round(rest*0.42);alloc[2]=Math.round(rest*0.32);alloc[3]=100-alloc[0]-alloc[1]-alloc[2];
+  render();animateTo('apy',apy,1);$('apyTrend').textContent='▲ +'+(Math.random()*0.8+0.2).toFixed(1)+'%';$('risk').textContent=risk;animateTo('rebs',rebs,0);
+  toast('Rebalance complete','Blended APY now '+apy.toFixed(1)+'% · tx '+txHash(),true);
+  cycling=false;$('cycleBtn').disabled=false;
+};
+
+function render(){
+  const g=`conic-gradient(var(--gold) 0% ${alloc[0]}%,var(--cyan) ${alloc[0]}% ${alloc[0]+alloc[1]}%,var(--violet) ${alloc[0]+alloc[1]}% ${alloc[0]+alloc[1]+alloc[2]}%,var(--red) ${alloc[0]+alloc[1]+alloc[2]}% 100%)`;
+  $('donut').style.background=g;
+  $('a0').textContent=alloc[0]+'%';$('a1').textContent=alloc[1]+'%';$('a2').textContent=alloc[2]+'%';$('a3').textContent=alloc[3]+'%';
+  $('donutVal').textContent='$'+Math.round(tvm).toLocaleString();
+}
+function animateTo(id,to,dec){const el=$(id);const from=parseFloat((el.textContent||'0').replace(/[^0-9.]/g,''))||0;const st=performance.now();const dur=900;
+  function step(n){let p=Math.min((n-st)/dur,1);p=1-Math.pow(1-p,3);const v=from+(to-from)*p;el.textContent=dec?v.toFixed(dec):Math.round(v).toLocaleString('en-US');if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+
+const log=$('log');
+function pushLog(ic,t,title,m){const d=document.createElement('div');d.className='log-item';d.innerHTML=`<div class="log-ic ${t}">${ic}</div><div class="log-b"><div class="t">${title}</div><div class="m">${m}</div></div><div class="log-time">${now()}</div>`;log.prepend(d);while(log.children.length>8)log.removeChild(log.lastChild);}
+
+const ambient=[['🔭','t-cyan','Yield Scout scanning protocols','7 RWA pools monitored on Casper Testnet'],['🛡️','t-gold','Reputation updated by accuracy','Risk Oracle +0.4 · forecast confirmed'],['⚙️','t-green','Compliance buffer maintained','liquid CSPR within policy']];
+let ai=0,streamStarted=false;
+function startStream(){if(streamStarted)return;streamStarted=true;setInterval(()=>{if(!cycling){pushLog(...ambient[ai%ambient.length]);ai++;}},5200);}
+</script>
+</body>
+</html>
