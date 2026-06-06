@@ -254,7 +254,7 @@ impl HeliosVault {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use odra::host::{Deployer, HostEnv, NoArgs};
+    use odra::host::{Deployer, HostEnv, HostRef, NoArgs};
 
     fn setup() -> (HostEnv, HeliosVaultHostRef) {
         let env = odra_test::env();
