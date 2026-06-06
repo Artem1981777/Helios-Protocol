@@ -57,4 +57,4 @@ jobs:
           echo "---- casper-test.env (token hidden) ----"
           grep -v CSPR_CLOUD_AUTH_TOKEN casper-test.env
       - name: Deploy + smoke test (on-chain)
-        run: ODRA_CASPER_LIVENET_ENV=casper-test pwd; ls -la keys || true; cargo run --bin helios_vault_on_livenet --features livenet
+        run: pwd; ls -la keys || true; ODRA_CASPER_LIVENET_ENV=casper-test cargo run --bin helios_vault_on_livenet --features livenet
