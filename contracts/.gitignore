@@ -1,0 +1,9 @@
+/target
+/wasm
+Cargo.lock
+
+# Never commit secrets or keys
+*.pem
+.env
+casper-test.env
+/keys
