@@ -19,7 +19,7 @@ fn main() {
 
     // ---- 1. Deploy the contract -------------------------------------------
     // Installing a contract is the most expensive call; give it plenty of gas.
-    env.set_gas(300_000_000_000u64);
+    env.set_gas(450_000_000_000u64);
     let mut vault = HeliosVault::deploy(&env, NoArgs);
     println!("\nHeliosVault deployed at: {}", vault.address().to_string());
 
