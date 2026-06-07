@@ -23,11 +23,9 @@
       var makeCsprTransferDeploy = s.makeCsprTransferDeploy;
       var PublicKey = s.PublicKey;
       log('PublicKey methods:', Object.getOwnPropertyNames(PublicKey));
-      var fromKey = PublicKey.fromHex(acct.public_key);
-      var toKey = PublicKey.fromHex(TREASURY);
       var deploy = makeCsprTransferDeploy({
-        fromPublicKeyHex: fromKey,
-        toPublicKeyHex: toKey,
+        fromPublicKeyHex: acct.public_key,
+        toPublicKeyHex: TREASURY,
         amountMotes: motes,
         transferId: String(Date.now()),
         chainName: 'casper-test',
