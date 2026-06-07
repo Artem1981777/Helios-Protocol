@@ -1,83 +1,52 @@
-/* Helios Protocol — real on-chain deposit via CSPR.click + casper-js-sdk */
+/* Helios Protocol — deposit via csprclick native transfer */
 (function () {
   var TREASURY = '014371b02df1d899a4f70ce3f956851c287e5e2e9aeb2670bf2c9b08d2c66ece8e';
-  var SDK_URL = 'https://esm.sh/casper-js-sdk@5';
   var MIN_CSPR = 2.5;
-  var sdkPromise = null;
   function $(id) { return document.getElementById(id); }
-  function note(t, m, link) { try { if (typeof toast === 'function') toast(t, m, link); } catch (e) {} }
+  function note(t, m) { try { if (typeof toast === 'function') toast(t, m); } catch (e) {} }
   function log() { try { console.log.apply(console, ['[helios/deposit]'].concat([].slice.call(arguments))); } catch (e) {} }
-  function loadSdk() {
-    if (!sdkPromise) {
-      note('Loading transaction engine…', 'Fetching casper-js-sdk (one-time)');
-      sdkPromise = import(SDK_URL).catch(function (e) { sdkPromise = null; throw e; });
-    }
-    return sdkPromise;
-  }
-  function explorer(hash) { return 'https://testnet.cspr.live/transaction/' + hash; }
   var btn = $('depBtn');
   log('init; depBtn found =', !!btn);
   if (!btn) return;
   btn.onclick = async function () {
-    var acct = (window.csprclick && window.csprclick.getActiveAccount) ? window.csprclick.getActiveAccount() : null;
-    if (!acct || !acct.public_key) { note('⚠️ Connect wallet', 'Connect your Casper wallet first.'); return; }
+    var acct = window.csprclick ? window.csprclick.getActiveAccount() : null;
+    if (!acct || !acct.public_key) { note('Connect wallet first', ''); return; }
     var amt = parseFloat(($('depInput') && $('depInput').value) || '0');
-    if (!(amt > 0)) { note('Enter amount', 'Type how much CSPR to deposit.'); return; }
-    if (amt < MIN_CSPR) { note('Minimum ' + MIN_CSPR + ' CSPR', 'Casper native transfers require at least ' + MIN_CSPR + ' CSPR.'); return; }
-    var senderPk = acct.public_key.toLowerCase();
-    var motes = BigInt(Math.round(amt * 1e9)).toString();
+    if (!(amt >= MIN_CSPR)) { note('Minimum ' + MIN_CSPR + ' CSPR', ''); return; }
+    var motes = String(Math.round(amt * 1e9));
+    log('sending', motes, 'motes to', TREASURY);
     var orig = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Preparing…';
+    btn.textContent = 'Awaiting signature…';
     try {
-      var sdk = await loadSdk();
-      log('sdk keys', Object.keys(sdk).join(','));
-      log('sdk.default keys', sdk.default ? Object.keys(sdk.default).join(',') : 'no default');
-      var chain = (window.csprclick && window.csprclick.chainName) || 'casper-test';
-      var makeCsprTransferDeploy = sdk.default.makeCsprTransferDeploy;
-      var PublicKey = sdk.default.PublicKey;
-      var fromKey = PublicKey.newPublicKey(senderPk);
-      var toKey = PublicKey.newPublicKey(TREASURY);
-      var tx = makeCsprTransferDeploy({
-        fromPublicKeyHex: fromKey,
-        toPublicKeyHex: toKey,
-        amountMotes: motes,
-        transferId: String(Date.now()),
-        chainName: chain,
-        paymentAmount: '100000000'
-      });
-      note('Confirm in wallet', 'Approve the deposit transaction…');
-      btn.textContent = 'Awaiting signature…';
-      var onStatus = function (status, data) {
-        log('status', status, data);
-        if (status === 'sent') note('Deposit submitted', 'Broadcasting to Casper Testnet…');
-        else if (status === 'processed') note('✅ Deposit confirmed', 'Executed on-chain');
-        else if (status === 'timeout') note('Still processing', 'Network is slow — check explorer.');
-        else if (status === 'error') note('On-chain error', (data && (data.message || JSON.stringify(data))) || 'Execution failed');
-      };
-      log('tx json', JSON.stringify(tx.toJSON()).slice(0,200));
-      log('csprclick methods', Object.keys(window.csprclick));
-      var res = await window.csprclick.sign(tx.toJSON(), senderPk);
-      log('send result', res);
-      if (res && res.transactionHash) {
-        var h = res.transactionHash;
-        note('✅ Deposit sent', amt + ' CSPR · view on explorer', explorer(h));
-        try { deposited = true; } catch (e) {}
-        try { connected = true; } catch (e) {}
-        try { tvm = (typeof tvm === 'number' ? tvm : 0) + amt; } catch (e) {}
-        try { if (typeof render === 'function') render(); } catch (e) {}
-        try { if (typeof startStream === 'function') startStream(); } catch (e) {}
-        try { if (typeof pushLog === 'function') pushLog('💰', 'now', 'On-chain deposit', amt + ' CSPR → Helios treasury'); } catch (e) {}
-      } else if (res && res.cancelled) {
-        note('Cancelled', 'You rejected the transaction.');
+      var res = await window.csprclick.send({
+        deploy: {
+          session: {
+            Transfer: {
+              args: [
+                ["amount", {"cl_type": "U512", "bytes": motes, "parsed": motes}],
+                ["target", {"cl_type": "PublicKey", "bytes": TREASURY, "parsed": TREASURY}],
+                ["id", {"cl_type": {"Option": "U64"}, "bytes": String(Date.now()), "parsed": Date.now()}]
+              ]
+            }
+          },
+          payment: {
+            ModuleBytes: {
+              module_bytes: "",
+              args: [["amount", {"cl_type": "U512", "bytes": "100000000", "parsed": "100000000"}]]
+            }
+          }
+        }
+      }, acct.public_key);
+      log('result', res);
+      if (res && res.deployHash) {
+        note('Deposit sent!', res.deployHash);
       } else {
-        note('Deposit failed', (res && (res.error || JSON.stringify(res.errorData))) || 'Unknown error');
+        note('Done', JSON.stringify(res));
       }
-    } catch (err) {
-      log('deposit error', err);
-      var msg = (err && err.message) || String(err);
-      if (/import|fetch|network|Failed to fetch/i.test(msg)) note('SDK load failed', 'Could not fetch casper-js-sdk — check VPN/network.');
-      else note('Deposit error', msg);
+    } catch(err) {
+      log('error', err);
+      note('Error', err.message || String(err));
     } finally {
       btn.disabled = false;
       btn.textContent = orig;
