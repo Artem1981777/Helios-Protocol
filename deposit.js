@@ -1,6 +1,7 @@
-/* Helios Protocol — deposit via csprclick sign-deploy */
+/* Helios Protocol — deposit via csprclick + casper-js-sdk v5 */
 (function () {
   var TREASURY = '014371b02df1d899a4f70ce3f956851c287e5e2e9aeb2670bf2c9b08d2c66ece8e';
+  var SDK_URL = 'https://esm.sh/casper-js-sdk@5.0.3';
   var MIN_CSPR = 2.5;
   function $(id) { return document.getElementById(id); }
   function note(t, m) { try { if (typeof toast === 'function') toast(t, m); } catch (e) {} }
@@ -17,43 +18,24 @@
     btn.disabled = true;
     btn.textContent = 'Awaiting signature...';
     try {
-      var res = await window.csprclick.send(
-        JSON.stringify({
-          deploy: {
-            header: {
-              account: acct.public_key,
-              timestamp: new Date().toISOString(),
-              ttl: "30m",
-              gas_price: 1,
-              body_hash: "",
-              dependencies: [],
-              chain_name: "casper-test"
-            },
-            payment: {
-              ModuleBytes: {
-                module_bytes: "",
-                args: [["amount", {"cl_type": "U512", "bytes": "0500e8764817", "parsed": "100000000"}]]
-              }
-            },
-            session: {
-              Transfer: {
-                args: [
-                  ["amount", {"cl_type": "U512", "bytes": "", "parsed": motes}],
-                  ["target", {"cl_type": "PublicKey", "bytes": TREASURY, "parsed": TREASURY}],
-                  ["id", {"cl_type": {"Option": "U64"}, "bytes": "", "parsed": Date.now()}]
-                ]
-              }
-            },
-            approvals: []
-          }
-        }),
-        acct.public_key
-      );
-      log('result', JSON.stringify(res).slice(0,300));
-      if (res && !res.cancelled) note('Submitted!', '');
-      else note('Cancelled', '');
+      var sdk = await import(SDK_URL);
+      var makeCsprTransferDeploy = sdk.default.makeCsprTransferDeploy;
+      var deploy = makeCsprTransferDeploy({
+        senderPublicKeyHex: acct.public_key,
+        recipientPublicKeyHex: TREASURY,
+        transferAmount: motes,
+        chainName: window.csprclick.chainName || 'casper-test'
+      });
+      log('deploy built OK');
+      var json = deploy.toJson();
+      log('json', JSON.stringify(json).slice(0,100));
+      var res = await window.csprclick.send(JSON.stringify({deploy: json}), acct.public_key);
+      log('result', JSON.stringify(res).slice(0,200));
+      if (res && res.deployHash) note('Deposit sent!', res.deployHash);
+      else if (res && res.cancelled) note('Cancelled', '');
+      else note('Done', JSON.stringify(res).slice(0,100));
     } catch(err) {
-      log('error', err.message);
+      log('error', err.message, err.stack);
       note('Error', err.message);
     } finally {
       btn.disabled = false;
