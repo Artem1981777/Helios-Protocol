@@ -24,7 +24,7 @@ fn main() {
     println!("\nHeliosVault deployed at: {}", vault.address().to_string());
 
     // ---- 2. Commit a risk policy on-chain (PolicyManager) -----------------
-    env.set_gas(2_000_000_000u64);
+    env.set_gas(3_000_000_000u64);
     vault.set_policy(60, 70, 2);
     println!("Policy committed: >=60% A-rated, min risk score 70, max 2 rebalances/day");
 
@@ -34,7 +34,7 @@ fn main() {
     println!("Deposited 1 CSPR. Total managed (motes): {}", vault.total_managed());
 
     // ---- 4. Record a swarm rebalance (Execution / AuditOracle) ------------
-    env.set_gas(2_000_000_000u64);
+    env.set_gas(3_000_000_000u64);
     vault.record_rebalance(1180, 82);
     println!("Rebalance recorded. Count: {}", vault.rebalance_count());
 
