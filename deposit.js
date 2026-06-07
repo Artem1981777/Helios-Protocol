@@ -25,12 +25,13 @@
       var PublicKey = s.PublicKey;
       log('PublicKey methods:', Object.getOwnPropertyNames(PublicKey));
       var deploy = makeCsprTransferDeploy({
-        fromPublicKeyHex: acct.public_key,
-        toPublicKeyHex: TREASURY,
-        amountMotes: motes,
-        transferId: String(Date.now()),
+        fromAccount: acct.public_key,
+        toAccount: TREASURY,
+        amount: motes,
+        id: String(Date.now()),
         chainName: 'casper-test',
-        paymentAmount: '100000000'
+        paymentAmount: '100000000',
+        memo: ''
       });
       log('deploy built, signing...');
       var json = deploy.toJson ? deploy.toJson() : JSON.parse(JSON.stringify(deploy));
