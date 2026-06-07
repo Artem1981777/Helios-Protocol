@@ -51,6 +51,8 @@
         else if (status === 'timeout') note('Still processing', 'Network is slow — check explorer.');
         else if (status === 'error') note('On-chain error', (data && (data.message || JSON.stringify(data))) || 'Execution failed');
       };
+      log('tx json', JSON.stringify(tx.toJSON()).slice(0,200));
+      log('csprclick methods', Object.keys(window.csprclick));
       var res = await window.csprclick.sign(tx.toJSON(), senderPk);
       log('send result', res);
       if (res && res.transactionHash) {
