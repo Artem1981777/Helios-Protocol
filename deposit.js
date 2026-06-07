@@ -32,6 +32,7 @@
     try {
       var sdk = await loadSdk();
       log('sdk keys', Object.keys(sdk).join(','));
+      log('sdk.default keys', sdk.default ? Object.keys(sdk.default).join(',') : 'no default');
       var chain = (window.csprclick && window.csprclick.chainName) || 'casper-test';
       var DeployUtil = sdk.default.DeployUtil;
       var CLPublicKey = sdk.default.CLPublicKey;
