@@ -1,7 +1,7 @@
 /* Helios Protocol — deposit via csprclick + casper-js-sdk */
 (function () {
   var TREASURY = '014371b02df1d899a4f70ce3f956851c287e5e2e9aeb2670bf2c9b08d2c66ece8e';
-  var SDK_URL = 'https://esm.sh/casper-js-sdk@2.15.4';
+  var SDK_URL = 'https://esm.sh/casper-js-sdk@2.13.4';
   var MIN_CSPR = 2.5;
   function $(id) { return document.getElementById(id); }
   function note(t, m) { try { if (typeof toast === 'function') toast(t, m); } catch (e) {} }
