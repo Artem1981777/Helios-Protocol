@@ -5,10 +5,10 @@ on:
     inputs:
       node_address:
         description: "Casper Testnet node RPC base URL"
-        default: "http://rpc.testnet.casperlabs.io:7777"
+        default: "https://node.testnet.cspr.cloud"
       events_url:
         description: "Casper Testnet node SSE events URL"
-        default: "http://rpc.testnet.casperlabs.io:9999/events"
+        default: "https://node.testnet.cspr.cloud/events"
 
 jobs:
   deploy:
