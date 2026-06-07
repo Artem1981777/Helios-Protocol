@@ -35,12 +35,14 @@
       log('sdk.default keys', sdk.default ? Object.keys(sdk.default).join(',') : 'no default');
       var chain = (window.csprclick && window.csprclick.chainName) || 'casper-test';
       var makeCsprTransferDeploy = sdk.default.makeCsprTransferDeploy;
-      var Key = sdk.default.Key;
+      var PublicKey = sdk.default.PublicKey;
+      var fromKey = PublicKey.newPublicKey(senderPk);
+      var toKey = PublicKey.newPublicKey(TREASURY);
       var tx = makeCsprTransferDeploy({
-        fromPublicKeyHex: senderPk,
-        toPublicKeyHex: TREASURY,
+        fromPublicKeyHex: fromKey,
+        toPublicKeyHex: toKey,
         amountMotes: motes,
-        transferId: Date.now(),
+        transferId: String(Date.now()),
         chainName: chain,
         paymentAmount: '100000000'
       });
