@@ -5,10 +5,10 @@ on:
     inputs:
       node_address:
         description: "Casper Testnet node RPC base URL"
-        default: "http://52.35.59.254:7777"
+        default: "http://rpc.testnet.casperlabs.io:7777"
       events_url:
         description: "Casper Testnet node SSE events URL"
-        default: "http://52.35.59.254:9999/events"
+        default: "http://rpc.testnet.casperlabs.io:9999/events"
 
 jobs:
   deploy:
@@ -57,4 +57,4 @@ jobs:
           echo "---- casper-test.env (token hidden) ----"
           grep -v CSPR_CLOUD_AUTH_TOKEN casper-test.env
       - name: Deploy + smoke test (on-chain)
-        run: pwd; ls -la keys || true; ODRA_CASPER_LIVENET_ENV=casper-test cargo run --bin helios_vault_on_livenet --features livenet
+        run: pwd; ls -la keys || true; RUST_BACKTRACE=1 ODRA_CASPER_LIVENET_ENV=casper-test cargo run --bin helios_vault_on_livenet --features livenet
