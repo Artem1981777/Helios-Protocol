@@ -22,9 +22,12 @@
       var makeTransferTransaction = sdk.default.makeTransferTransaction || sdk.default.makeCsprTransferTransaction;
       log('makeTransferTransaction=', typeof makeTransferTransaction);
       var chain = window.csprclick.chainName || 'casper-test';
+      var PublicKey = sdk.default.PublicKey;
+      var sender = PublicKey.fromHex(acct.public_key);
+      var recipient = PublicKey.fromHex(TREASURY);
       var transaction = makeTransferTransaction(
-        acct.public_key,
-        TREASURY,
+        sender,
+        recipient,
         motes,
         chain
       );
