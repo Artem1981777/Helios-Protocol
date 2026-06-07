@@ -60,7 +60,7 @@
           .amount(motes)
           .id(Date.now())
           .chainName(chain)
-          .payment(100000000)
+          .payment(100000000).gasPriceTolerance(1)
           .build();
         var txJson = tx.toJSON();
         L('tx built; calling send');
