@@ -32,7 +32,11 @@
           var short=h?h.slice(0,10)+'…':'';
           var link=h?('<a href="https://testnet.cspr.live/transaction/'+h+'" target="_blank" style="color:#FFB627">view tx</a>'):'';
           toast('On-chain rebalance OK','record_rebalance() · '+short+' · '+link);
-          try{var r=$('rebs');if(r)r.textContent=String(parseInt(r.textContent||'0',10)+1);}catch(e){}
+          var curR;try{curR=parseInt(($('rebs')&&$('rebs').textContent)||'0',10);}catch(e){curR=0;}
+          var newR=(isNaN(curR)?0:curR)+1;
+          try{window.rebs=newR;window.apy=apyBps/100;window.risk=risk;}catch(e){}
+          try{if(typeof window.render==='function')window.render();}catch(e){}
+          try{var r=$('rebs');if(r)r.textContent=String(newR);}catch(e){}
           try{var ap=$('apy');if(ap)ap.textContent=(apyBps/100).toFixed(1)+'%';}catch(e){}
           try{var rk=$('risk');if(rk)rk.textContent=String(risk);}catch(e){}
           logLine('rebalance confirmed · '+short);
@@ -43,8 +47,19 @@
       });
     }).catch(function(e){toast('Swarm error',String((e&&e.message)||e));if(btn)btn.disabled=false;});
   }
-  function wire(){var b=$('cycleBtn');if(b)b.onclick=run;}
+  function unlock(){
+    try{window.deposited=true;}catch(e){}
+    try{if(typeof window.render==='function')window.render();}catch(e){}
+    try{var ls=document.querySelectorAll('.locked');for(var i=0;i<ls.length;i++){ls[i].classList.remove('locked');}}catch(e){}
+  }
+  function wire(){
+    unlock();
+    var b=$('cycleBtn');
+    if(b){b.onclick=run;b.disabled=false;try{b.removeAttribute('disabled');b.style.pointerEvents='auto';b.style.opacity='1';b.style.cursor='pointer';}catch(e){}}
+  }
   if(window.csprclick)wire();
   window.addEventListener('csprclick:loaded',wire);
-  setTimeout(wire,1500);
+  setTimeout(wire,800);
+  setTimeout(wire,2000);
+  setTimeout(wire,4000);
 })();
