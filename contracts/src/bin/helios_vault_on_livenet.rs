@@ -29,7 +29,7 @@ fn main() {
     println!("Policy committed: >=60% A-rated, min risk score 70, max 2 rebalances/day");
 
     // ---- 3. First on-chain deposit (1 CSPR == 1_000_000_000 motes) --------
-    env.set_gas(3_000_000_000u64);
+    env.set_gas(10_000_000_000u64);
     vault.with_tokens(U512::from(1_000_000_000u64)).deposit();
     println!("Deposited 1 CSPR. Total managed (motes): {}", vault.total_managed());
 
