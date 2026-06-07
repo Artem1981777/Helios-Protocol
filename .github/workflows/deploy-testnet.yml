@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           if [ -z "${CASPER_SECRET_KEY_B64:-}" ]; then echo "Missing secret CASPER_SECRET_KEY_B64"; exit 1; fi
           mkdir -p keys
-          echo "$CASPER_SECRET_KEY_B64" > keys/secret_key.pem; echo "BYTES=$(wc -c < keys/secret_key.pem)"; head -n1 keys/secret_key.pem; tail -n1 keys/secret_key.pem; openssl pkey -in keys/secret_key.pem -noout || echo PEM_PARSE_FAILED
+          echo "$CASPER_SECRET_KEY_B64" | base64 -d > keys/secret_key.pem; echo "BYTES=$(wc -c < keys/secret_key.pem)"; head -n1 keys/secret_key.pem; tail -n1 keys/secret_key.pem; openssl pkey -in keys/secret_key.pem -noout || echo PEM_PARSE_FAILED
           {
             echo "ODRA_CASPER_LIVENET_SECRET_KEY_PATH=./keys/secret_key.pem"
             echo "ODRA_CASPER_LIVENET_NODE_ADDRESS=${NODE_ADDRESS}"
