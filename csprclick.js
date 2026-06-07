@@ -8,7 +8,7 @@
   }
   window.clickSDKOptions = {
     appName: 'Helios Protocol',
-    appId: '***REMOVED***',
+    appId: '00f0c909-02a2-4973-8e88-dc99426c',
     contentMode: 'iframe',
     providers: ['casper-wallet', 'ledger', 'metamask-snap'],
   };
