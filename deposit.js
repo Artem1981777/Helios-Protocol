@@ -1,4 +1,4 @@
-/* Helios Protocol — deposit via csprclick + casper-js-sdk */
+/* Helios Protocol — deposit via csprclick */
 (function () {
   var TREASURY = '014371b02df1d899a4f70ce3f956851c287e5e2e9aeb2670bf2c9b08d2c66ece8e';
   var SDK_URL = 'https://esm.sh/casper-js-sdk@5.0.3';
@@ -19,25 +19,28 @@
     btn.textContent = 'Awaiting signature…';
     try {
       var sdk = await import(SDK_URL);
-      var CasperClient = sdk.default.CasperClient || sdk.CasperClient;
-      var DeployUtil = sdk.default.DeployUtil || sdk.DeployUtil;
-      var CLPublicKey = sdk.default.CLPublicKey || sdk.CLPublicKey;
-      log('CLPublicKey=', typeof CLPublicKey, 'DeployUtil=', typeof DeployUtil);
-      var sender = CLPublicKey.fromHex(acct.public_key);
-      var target = CLPublicKey.fromHex(TREASURY);
-      var chain = 'casper-test';
-      var deployParams = new DeployUtil.DeployParams(sender, chain, 1, 1800000);
-      var session = DeployUtil.ExecutableDeployItem.newTransfer(motes, target, null, Date.now());
-      var payment = DeployUtil.standardPayment(100000000);
-      var deploy = DeployUtil.makeDeploy(deployParams, session, payment);
-      var json = DeployUtil.deployToJson(deploy);
-      log('deploy json ready, signing...');
+      var s = sdk.default;
+      var makeCsprTransferDeploy = s.makeCsprTransferDeploy;
+      var PublicKey = s.PublicKey;
+      log('PublicKey methods:', Object.getOwnPropertyNames(PublicKey));
+      var fromKey = new PublicKey(Buffer.from(acct.public_key.slice(2), 'hex'), acct.public_key.startsWith('01') ? 1 : 2);
+      var toKey = new PublicKey(Buffer.from(TREASURY.slice(2), 'hex'), 1);
+      var deploy = makeCsprTransferDeploy({
+        fromPublicKeyHex: fromKey,
+        toPublicKeyHex: toKey,
+        amountMotes: motes,
+        transferId: String(Date.now()),
+        chainName: 'casper-test',
+        paymentAmount: '100000000'
+      });
+      log('deploy built, signing...');
+      var json = deploy.toJson ? deploy.toJson() : JSON.parse(JSON.stringify(deploy));
       var res = await window.csprclick.sign(json, acct.public_key);
-      log('sign result', res);
-      if (res && res.deploy) {
-        var client = new CasperClient('https://node.testnet.casper.network/rpc');
-        var hash = await client.putDeploy(res.deploy);
-        note('Deposit sent!', hash);
+      log('sign result', JSON.stringify(res).slice(0, 200));
+      if (res && !res.cancelled) {
+        note('Deposit sent!', 'Transaction submitted');
+      } else {
+        note('Cancelled', '');
       }
     } catch(err) {
       log('error', err);
