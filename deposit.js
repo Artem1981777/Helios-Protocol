@@ -34,15 +34,16 @@
       log('sdk keys', Object.keys(sdk).join(','));
       log('sdk.default keys', sdk.default ? Object.keys(sdk.default).join(',') : 'no default');
       var chain = (window.csprclick && window.csprclick.chainName) || 'casper-test';
-      var DeployUtil = sdk.default.DeployUtil;
-      var CLPublicKey = sdk.default.CLPublicKey;
-      var sender = CLPublicKey.fromHex(senderPk);
-      var target = CLPublicKey.fromHex(TREASURY);
-      var tx = DeployUtil.makeDeploy(
-        new DeployUtil.DeployParams(sender, chain, 1, 1800000),
-        DeployUtil.ExecutableDeployItem.newTransfer(motes, target, null, Date.now()),
-        DeployUtil.standardPayment(100000000)
-      );
+      var makeCsprTransferDeploy = sdk.default.makeCsprTransferDeploy;
+      var Key = sdk.default.Key;
+      var tx = makeCsprTransferDeploy({
+        fromPublicKeyHex: senderPk,
+        toPublicKeyHex: TREASURY,
+        amountMotes: motes,
+        transferId: Date.now(),
+        chainName: chain,
+        paymentAmount: '100000000'
+      });
       note('Confirm in wallet', 'Approve the deposit transaction…');
       btn.textContent = 'Awaiting signature…';
       var onStatus = function (status, data) {
