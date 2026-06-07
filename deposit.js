@@ -1,7 +1,7 @@
 /* Helios Protocol — deposit via csprclick + casper-js-sdk */
 (function () {
   var TREASURY = '014371b02df1d899a4f70ce3f956851c287e5e2e9aeb2670bf2c9b08d2c66ece8e';
-  var SDK_URL = 'https://esm.sh/casper-js-sdk@2.13.4';
+  var SDK_URL = 'https://esm.sh/casper-js-sdk@5.0.3';
   var MIN_CSPR = 2.5;
   function $(id) { return document.getElementById(id); }
   function note(t, m) { try { if (typeof toast === 'function') toast(t, m); } catch (e) {} }
@@ -19,9 +19,10 @@
     btn.textContent = 'Awaiting signature…';
     try {
       var sdk = await import(SDK_URL);
-      var CasperClient = sdk.CasperClient;
-      var DeployUtil = sdk.DeployUtil;
-      var CLPublicKey = sdk.CLPublicKey;
+      var CasperClient = sdk.default.CasperClient || sdk.CasperClient;
+      var DeployUtil = sdk.default.DeployUtil || sdk.DeployUtil;
+      var CLPublicKey = sdk.default.CLPublicKey || sdk.CLPublicKey;
+      log('CLPublicKey=', typeof CLPublicKey, 'DeployUtil=', typeof DeployUtil);
       var sender = CLPublicKey.fromHex(acct.public_key);
       var target = CLPublicKey.fromHex(TREASURY);
       var chain = 'casper-test';
