@@ -29,8 +29,8 @@
       log('deploy built OK');
       log('deploy methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(deploy)));
       log('sdk serialize methods:', Object.keys(sdk.default).filter(k => k.toLowerCase().includes('serial') || k.toLowerCase().includes('json') || k.toLowerCase().includes('deploy')));
-      var serializeDeploy = sdk.default.serializeDeploy || sdk.default.DeployUtil && sdk.default.DeployUtil.deployToJson;
-      var json = serializeDeploy ? serializeDeploy(deploy) : deploy.toJSON();
+      var Deploy = sdk.default.Deploy;
+      var json = Deploy.toJson ? Deploy.toJson(deploy) : JSON.parse(JSON.stringify(deploy, function(k,v){ return typeof v === 'bigint' ? v.toString() : v; }));
       log('json', JSON.stringify(json).slice(0,100));
       var res = await window.csprclick.send(JSON.stringify({deploy: json}), acct.public_key);
       log('result', JSON.stringify(res).slice(0,200));
