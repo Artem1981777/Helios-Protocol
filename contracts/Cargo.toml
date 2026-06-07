@@ -5,17 +5,17 @@ edition = "2021"
 description = "HeliosVault — on-chain RWA treasury for Helios Protocol on Casper"
 
 [dependencies]
-odra = { version = "2.6.0", default-features = false }
-odra-casper-livenet-env = { version = "2.6.0", optional = true }
+odra = { version = "2.7.2", default-features = false }
+odra-casper-livenet-env = { version = "2.7.2", optional = true }
 
 [dev-dependencies]
-odra-test = { version = "2.6.0", default-features = false }
+odra-test = { version = "2.7.2", default-features = false }
 
 [build-dependencies]
-odra-build = { version = "2.6.0", default-features = false }
+odra-build = { version = "2.7.2", default-features = false }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-odra-build = { version = "2.6.0", default-features = false }
+odra-build = { version = "2.7.2", default-features = false }
 
 [features]
 default = []
