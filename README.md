@@ -19,11 +19,13 @@ Built for the **Casper Agentic Buildathon 2026**.
 |------|-----------|----------|
 | HeliosVault contract package | `f21eb828…6af872` | [view](https://testnet.cspr.live/contract-package/f21eb828df55867867bdc91adf1658b315fd1caecde9b601481e3ab32c6af872) |
 | `record_rebalance` — agent execution (CLI) | `44ecaca6…71e727` | [view](https://testnet.cspr.live/transaction/44ecaca6ae81e007e25db865cc5e182b95119bb13670aff6f4e8f6433e71e727) |
-| `record_rebalance` — in-app via CSPR.click | `7b9acb90…d8244` | [view](https://testnet.cspr.live/transaction/7b9acb9065d1e737f90b487276ef5424d6b6ff433821ff904f845541b72d8244) |
+| `record_rebalance` — in-app deposit (CSPR.click) | `7b9acb90…d8244` | [view](https://testnet.cspr.live/transaction/7b9acb9065d1e737f90b487276ef5424d6b6ff433821ff904f845541b72d8244) |
+| `record_rebalance` — **autonomous swarm cycle** | `e66b9283…6aee4` | [view](https://testnet.cspr.live/transaction/e66b9283210096eb7d0037eeb5261b03fc28c6a1dc04461e28b232cd6416aee4) |
 
-> Every rebalance the swarm decides is written on-chain through the
-> `record_rebalance(apy_bps: u32, risk_score: u8)` entrypoint of HeliosVault.
-> Latest in-app proof: `apy_bps = 1180`, `risk_score = 82`, status **Success** (block 8105537).
+> Pressing **Run swarm cycle** triggers a live scout → verify → rebalance loop
+> that writes the agents' decision on-chain via
+> `record_rebalance(apy_bps: u32, risk_score: u8)`.
+> Latest swarm-cycle proof: `apy_bps = 1193` (11.93%), `risk_score = 82`, status **Success** (block 8107078).
 
 ---
 
@@ -31,6 +33,7 @@ Built for the **Casper Agentic Buildathon 2026**.
 
 | Agent | Role |
 |-------|------|
+| 🧠 Orchestrator | Parses policy, coordinates the swarm |
 | 🔭 Yield Scout | Scans tokenized RWA pools for live APY and liquidity |
 | 🛡️ Risk Oracle | Buys risk/rating data via **x402**, posts verifiable proofs |
 | ⚙️ Execution | Signs & submits rebalances to HeliosVault on Casper |
@@ -70,8 +73,8 @@ The vault enforces a policy the user commits on-chain:
     cd Helios-Protocol
     npx serve .
 
-Connect a **Casper Testnet** account via CSPR.click, set a policy, and make a
-deposit — the swarm activates after the first on-chain tx.
+Connect a **Casper Testnet** account via CSPR.click, then press **Run swarm
+cycle** to trigger a live on-chain rebalance.
 
 ---
 
