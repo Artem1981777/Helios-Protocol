@@ -66,11 +66,9 @@ The vault enforces a policy the user commits on-chain:
 
 ## 🚀 Run locally
 
-\`\`\`
-git clone https://github.com/Artem1981777/Helios-Protocol
-cd Helios-Protocol
-npx serve .
-\`\`\`
+    git clone https://github.com/Artem1981777/Helios-Protocol
+    cd Helios-Protocol
+    npx serve .
 
 Connect a **Casper Testnet** account via CSPR.click, set a policy, and make a
 deposit — the swarm activates after the first on-chain tx.
