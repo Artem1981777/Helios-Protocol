@@ -52,7 +52,7 @@
         var NativeTransferBuilder = sdk.NativeTransferBuilder, PublicKey = sdk.PublicKey;
         if (!NativeTransferBuilder || !PublicKey) { L('missing exports', typeof NativeTransferBuilder, typeof PublicKey); note('SDK error', 'No NativeTransferBuilder in casper-js-sdk.'); return; }
         var motes = BigInt(Math.round(amt * 1e9)).toString();
-        var chain = (window.csprclick && window.csprclick.chainName) || 'casper-test';
+        var chain = 'casper-test';
         L('building tx', pk, '->', TREASURY, motes, chain);
         var tx = new NativeTransferBuilder()
           .from(PublicKey.fromHex(pk))
