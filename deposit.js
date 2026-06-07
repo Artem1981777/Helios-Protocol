@@ -23,8 +23,8 @@
       var makeCsprTransferDeploy = s.makeCsprTransferDeploy;
       var PublicKey = s.PublicKey;
       log('PublicKey methods:', Object.getOwnPropertyNames(PublicKey));
-      var fromKey = new PublicKey(Buffer.from(acct.public_key.slice(2), 'hex'), acct.public_key.startsWith('01') ? 1 : 2);
-      var toKey = new PublicKey(Buffer.from(TREASURY.slice(2), 'hex'), 1);
+      var fromKey = PublicKey.fromHex(acct.public_key);
+      var toKey = PublicKey.fromHex(TREASURY);
       var deploy = makeCsprTransferDeploy({
         fromPublicKeyHex: fromKey,
         toPublicKeyHex: toKey,
