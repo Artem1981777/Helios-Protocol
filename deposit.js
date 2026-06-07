@@ -10,6 +10,7 @@
   if (!btn) return;
   btn.onclick = async function () {
     var acct = window.csprclick ? window.csprclick.getActiveAccount() : null;
+    log('acct', JSON.stringify(acct));
     if (!acct || !acct.public_key) { note('Connect wallet first', ''); return; }
     var amt = parseFloat(($('depInput') && $('depInput').value) || '0');
     if (!(amt >= MIN_CSPR)) { note('Minimum ' + MIN_CSPR + ' CSPR', ''); return; }
