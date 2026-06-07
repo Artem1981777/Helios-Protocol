@@ -33,9 +33,8 @@
       var sdk = await loadSdk();
       log('sdk keys', Object.keys(sdk).join(','));
       var chain = (window.csprclick && window.csprclick.chainName) || 'casper-test';
-      var CasperClient = sdk.CasperClient || sdk.default;
-      var DeployUtil = sdk.DeployUtil || (sdk.default && sdk.default.DeployUtil);
-      var CLPublicKey = sdk.CLPublicKey || (sdk.default && sdk.default.CLPublicKey);
+      var DeployUtil = sdk.default.DeployUtil;
+      var CLPublicKey = sdk.default.CLPublicKey;
       var sender = CLPublicKey.fromHex(senderPk);
       var target = CLPublicKey.fromHex(TREASURY);
       var tx = DeployUtil.makeDeploy(
