@@ -27,6 +27,8 @@
         chainName: window.csprclick.chainName || 'casper-test'
       });
       log('deploy built OK');
+      log('deploy methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(deploy)));
+      log('sdk serialize methods:', Object.keys(sdk.default).filter(k => k.toLowerCase().includes('serial') || k.toLowerCase().includes('json') || k.toLowerCase().includes('deploy')));
       var serializeDeploy = sdk.default.serializeDeploy || sdk.default.DeployUtil && sdk.default.DeployUtil.deployToJson;
       var json = serializeDeploy ? serializeDeploy(deploy) : deploy.toJSON();
       log('json', JSON.stringify(json).slice(0,100));
