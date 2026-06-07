@@ -31,17 +31,18 @@
     btn.textContent = 'Preparing…';
     try {
       var sdk = await loadSdk();
-      var NativeTransferBuilder = sdk.NativeTransferBuilder;
-      var PublicKey = sdk.PublicKey;
+      log('sdk keys', Object.keys(sdk).join(','));
       var chain = (window.csprclick && window.csprclick.chainName) || 'casper-test';
-      var tx = new NativeTransferBuilder()
-        .from(PublicKey.fromHex(senderPk))
-        .target(PublicKey.fromHex(TREASURY))
-        .amount(motes)
-        .id(Date.now())
-        .chainName(chain)
-        .payment(100000000)
-        .build();
+      var CasperClient = sdk.CasperClient || sdk.default;
+      var DeployUtil = sdk.DeployUtil || (sdk.default && sdk.default.DeployUtil);
+      var CLPublicKey = sdk.CLPublicKey || (sdk.default && sdk.default.CLPublicKey);
+      var sender = CLPublicKey.fromHex(senderPk);
+      var target = CLPublicKey.fromHex(TREASURY);
+      var tx = DeployUtil.makeDeploy(
+        new DeployUtil.DeployParams(sender, chain, 1, 1800000),
+        DeployUtil.ExecutableDeployItem.newTransfer(motes, target, null, Date.now()),
+        DeployUtil.standardPayment(100000000)
+      );
       note('Confirm in wallet', 'Approve the deposit transaction…');
       btn.textContent = 'Awaiting signature…';
       var onStatus = function (status, data) {
