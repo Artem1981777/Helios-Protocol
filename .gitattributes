@@ -1,0 +1,7 @@
+# GitHub language stats: highlight the smart contract (Rust) and the agent,
+# exclude the demo front-end and integration glue.
+*.html linguist-detectable=false
+csprclick.js linguist-vendored
+deposit.js linguist-vendored
+deposit-fix.js linguist-vendored
+cycle-fix.js linguist-vendored
