@@ -143,3 +143,36 @@ Autonomous agent / MCP server: see the sections above.
 ---
 
 Built with ☀️ for the Casper Agentic Buildathon 2026.
+
+## 💸 x402 — autonomous machine payments (CSPR.cloud facilitator)
+
+Helios agents pay for premium data using the **x402** protocol on Casper, settling through the official **CSPR.cloud x402 facilitator** (`https://x402-facilitator.cspr.cloud`).
+
+- **Scheme:** `exact` over a CEP-18 token, authorized with an **EIP-712 `TransferWithAuthorization`** signature (EIP-3009 style).
+- **Network:** `casper:casper-test` (CAIP-2).
+- **Signing:** the agent signs the EIP-712 digest with its Ed25519 Casper key — no gas, no on-chain tx needed to authorize a payment.
+- **Real verification:** the signed payload is validated by the live facilitator, which returns `isValid: true`.
+
+### Proof — live facilitator returns isValid
+
+    $ node agent/x402.mjs verify
+    [selftest] transfer_with_authorization: PASS
+    [selftest] casper_address_permit: PASS
+    [/verify] 200 { "isValid": true, "payer": "00f3fc45961e794fa0acd30ef0841e0f193521cbc68b83319dd9dec7cb13ea3987" }
+
+The EIP-712 engine in `agent/x402.mjs` is verified **bit-exact** against the official `casper-ecosystem/casper-eip-712` cross-language test vectors (`node agent/x402.mjs selftest`), so the digest the agent signs is identical to the one the facilitator reconstructs.
+
+### Full 402 flow — resource server + paying client
+
+`agent/x402.mjs` also ships a real x402 resource server that gates a premium treasury-rebalance signal:
+
+    $ node agent/x402.mjs demo
+    [demo] step1 GET (no payment)        -> 402  + PaymentRequirements
+    [demo] step3 GET (PAYMENT-SIGNATURE) -> 200  + live signal (verified by facilitator)
+
+- `node agent/x402.mjs serve` — run the resource server (`GET /premium/treasury-signal`).
+- Unpaid request → `402` + `PaymentRequirements`.
+- Client signs a `TransferWithAuthorization` and replays with the `PAYMENT-SIGNATURE` header.
+- Server forwards the payload to the facilitator `/verify`; on `isValid` it returns the gated signal.
+
+> `/settle` (on-chain CEP-18 `transfer_with_authorization`) is wired through the same facilitator and requires the agent to hold the x402 CEP-18 token balance. `/verify` needs no balance and is the cryptographic proof of a valid payment authorization.

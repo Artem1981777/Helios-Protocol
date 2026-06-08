@@ -11,6 +11,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "casper-js-sdk": "^5.0.12"
+    "blakejs": "^1.2.1",
+    "casper-js-sdk": "^5.0.12",
+    "js-sha3": "^0.9.3"
   }
 }
