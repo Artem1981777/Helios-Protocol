@@ -2,9 +2,9 @@
 
 **Autonomous agentic treasury for tokenized real-world assets (RWA) on Casper.**
 
-Helios runs a swarm of AI agents that continuously scan tokenized RWA yield
-sources, verify them against paid data feeds, and rebalance an on-chain
-portfolio — all bounded by a user-defined policy committed to the blockchain.
+Helios runs a swarm of AI agents that continuously pull real RWA yield data,
+score it against an on-chain risk policy, and rebalance an on-chain portfolio —
+with no human in the loop. Decisions are committed to the Casper blockchain.
 
 Built for the **Casper Agentic Buildathon 2026**.
 
@@ -18,14 +18,17 @@ Built for the **Casper Agentic Buildathon 2026**.
 | What | Hash / ID | Explorer |
 |------|-----------|----------|
 | HeliosVault contract package | `f21eb828…6af872` | [view](https://testnet.cspr.live/contract-package/f21eb828df55867867bdc91adf1658b315fd1caecde9b601481e3ab32c6af872) |
-| `record_rebalance` — agent execution (CLI) | `44ecaca6…71e727` | [view](https://testnet.cspr.live/transaction/44ecaca6ae81e007e25db865cc5e182b95119bb13670aff6f4e8f6433e71e727) |
+| `record_rebalance` — CLI execution | `44ecaca6…71e727` | [view](https://testnet.cspr.live/transaction/44ecaca6ae81e007e25db865cc5e182b95119bb13670aff6f4e8f6433e71e727) |
 | `record_rebalance` — in-app deposit (CSPR.click) | `7b9acb90…d8244` | [view](https://testnet.cspr.live/transaction/7b9acb9065d1e737f90b487276ef5424d6b6ff433821ff904f845541b72d8244) |
-| `record_rebalance` — **autonomous swarm cycle** | `e66b9283…6aee4` | [view](https://testnet.cspr.live/transaction/e66b9283210096eb7d0037eeb5261b03fc28c6a1dc04461e28b232cd6416aee4) |
+| `record_rebalance` — in-app swarm cycle (browser) | `e66b9283…6aee4` | [view](https://testnet.cspr.live/transaction/e66b9283210096eb7d0037eeb5261b03fc28c6a1dc04461e28b232cd6416aee4) |
+| `record_rebalance` — **fully autonomous agent (TS swarm)** | `4369d0d5…5352` | [view](https://testnet.cspr.live/transaction/4369d0d5b63a3040bacaafe172476acf3b57d88d8c0b3ee8dbc9d9caf92f5352) |
 
-> Pressing **Run swarm cycle** triggers a live scout → verify → rebalance loop
-> that writes the agents' decision on-chain via
-> `record_rebalance(apy_bps: u32, risk_score: u8)`.
-> Latest swarm-cycle proof: `apy_bps = 1193` (11.93%), `risk_score = 82`, status **Success** (block 8107078).
+> **Autonomous run is genuinely data-driven.** In the run above, the Yield Scout
+> pulled live US Treasury rates (T-Bills **3.69%**), the Risk Oracle scored the
+> term structure to a quality score of **81** (policy floor 70), and the
+> Orchestrator targeted **11.69% APY → `apy_bps = 1169`** — then the agent signed
+> with its own key and submitted on-chain with no human in the loop. The
+> non-round `1169` follows directly from the real 3.69% rate.
 
 ---
 
@@ -34,11 +37,37 @@ Built for the **Casper Agentic Buildathon 2026**.
 | Agent | Role |
 |-------|------|
 | 🧠 Orchestrator | Parses policy, coordinates the swarm |
-| 🔭 Yield Scout | Scans tokenized RWA pools for live APY and liquidity |
-| 🛡️ Risk Oracle | Buys risk/rating data via **x402**, posts verifiable proofs |
-| ⚙️ Execution | Signs & submits rebalances to HeliosVault on Casper |
+| 🔭 Yield Scout | Pulls live RWA / Treasury yields |
+| 🛡️ Risk Oracle | Scores risk vs on-chain policy (x402-ready data layer) |
+| ⚙️ Execution | Signs & submits rebalances to HeliosVault |
 
-The loop: **scout → verify (x402) → rebalance**, repeated under policy constraints.
+The loop: **scout → score → rebalance**, repeated under policy constraints.
+
+---
+
+## 🤖 Autonomous agent runner (`agent/swarm.mjs`)
+
+A headless Node process — **no browser, no wallet popup, no button**:
+
+1. **Scout** fetches live US Treasury average interest rates (reference for
+   tokenized T-bills / RWA) from `api.fiscaldata.treasury.gov`.
+2. **Risk Oracle** derives a risk/quality score from the real term structure
+   (T-Notes vs T-Bills spread) against the on-chain policy floor. Optional
+   `X402_URL` plugs in a paid data feed via the CSPR x402 facilitator.
+3. **Orchestrator** combines the real risk-free rate with a modeled RWA credit
+   premium into a target APY.
+4. **Execution** loads the agent key from PEM, builds a
+   `record_rebalance(apy_bps, risk_score)` transaction with `casper-js-sdk`,
+   signs it, and submits it to the network via **CSPR.cloud** JSON-RPC.
+
+Run it:
+
+    cd agent
+    npm i casper-js-sdk@5
+    node swarm.mjs
+
+Optional: `X402_URL=<paid-feed>` to enable x402 data purchase, `LOOP=1` to run
+on an interval.
 
 ---
 
@@ -46,10 +75,10 @@ The loop: **scout → verify (x402) → rebalance**, repeated under policy const
 
 The vault enforces a policy the user commits on-chain:
 
-- Minimum asset rating (e.g. A+)
-- Maximum portfolio risk score (0–100)
+- Minimum asset rating / quality score
+- Maximum portfolio risk
 - Rebalance frequency
-- Objective (e.g. maximize APY within risk budget)
+- Objective (maximize APY within risk budget)
 
 `HeliosVault` entrypoints: `init`, `deposit`, `withdraw`, `set_policy`,
 `set_agent`, `record_rebalance`, plus views.
@@ -59,22 +88,23 @@ The vault enforces a policy the user commits on-chain:
 ## 🛠️ Stack
 
 - **Smart contracts:** Odra (Rust) → HeliosVault, deployed on Casper Testnet
-- **Wallet & auth:** CSPR.click
-- **RPC / REST:** CSPR.cloud
-- **Paid data:** x402
-- **SDK:** casper-js-sdk v5
-- **Agent core:** TypeScript agent swarm (+ MCP)
+- **Autonomous runner:** Node + casper-js-sdk v5, live US Treasury data feed
+- **Wallet & auth:** CSPR.click (web app)
+- **RPC:** CSPR.cloud JSON-RPC
+- **Paid data:** x402 (CSPR facilitator)
+- **Agent layer:** TypeScript swarm (+ MCP)
 
 ---
 
 ## 🚀 Run locally
 
+Web app:
+
     git clone https://github.com/Artem1981777/Helios-Protocol
     cd Helios-Protocol
     npx serve .
 
-Connect a **Casper Testnet** account via CSPR.click, then press **Run swarm
-cycle** to trigger a live on-chain rebalance.
+Autonomous agent: see **Autonomous agent runner** above.
 
 ---
 
@@ -82,7 +112,7 @@ cycle** to trigger a live on-chain rebalance.
 
 - Contract package: `f21eb828df55867867bdc91adf1658b315fd1caecde9b601481e3ab32c6af872`
 - Contract hash: `28262c0e06a081ad6516a7479fd895f3f5f2f87d74fc50f7fcbfda968955cf31`
-- Caller / agent account: `01e6bd20af8ddf77d4bb30ad2658b5ceecf8ce3bd94cf39eda523db786133f6434`
+- Agent account: `01e6bd20af8ddf77d4bb30ad2658b5ceecf8ce3bd94cf39eda523db786133f6434`
 
 ---
 
