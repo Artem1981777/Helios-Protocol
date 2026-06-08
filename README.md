@@ -21,14 +21,14 @@ Built for the **Casper Agentic Buildathon 2026**.
 | `record_rebalance` — CLI execution | `44ecaca6…71e727` | [view](https://testnet.cspr.live/transaction/44ecaca6ae81e007e25db865cc5e182b95119bb13670aff6f4e8f6433e71e727) |
 | `record_rebalance` — in-app deposit (CSPR.click) | `7b9acb90…d8244` | [view](https://testnet.cspr.live/transaction/7b9acb9065d1e737f90b487276ef5424d6b6ff433821ff904f845541b72d8244) |
 | `record_rebalance` — in-app swarm cycle (browser) | `e66b9283…6aee4` | [view](https://testnet.cspr.live/transaction/e66b9283210096eb7d0037eeb5261b03fc28c6a1dc04461e28b232cd6416aee4) |
-| `record_rebalance` — **fully autonomous agent (TS swarm)** | `4369d0d5…5352` | [view](https://testnet.cspr.live/transaction/4369d0d5b63a3040bacaafe172476acf3b57d88d8c0b3ee8dbc9d9caf92f5352) |
+| `record_rebalance` — **fully autonomous agent (swarm)** | `4369d0d5…5352` | [view](https://testnet.cspr.live/transaction/4369d0d5b63a3040bacaafe172476acf3b57d88d8c0b3ee8dbc9d9caf92f5352) |
 
-> **Autonomous run is genuinely data-driven.** In the run above, the Yield Scout
-> pulled live US Treasury rates (T-Bills **3.69%**), the Risk Oracle scored the
-> term structure to a quality score of **81** (policy floor 70), and the
-> Orchestrator targeted **11.69% APY → `apy_bps = 1169`** — then the agent signed
-> with its own key and submitted on-chain with no human in the loop. The
-> non-round `1169` follows directly from the real 3.69% rate.
+> **Genuinely data-driven.** In the autonomous run, the Yield Scout pulled live
+> US Treasury rates (T-Bills **3.69%**), the Risk Oracle scored the term
+> structure to **81** (policy floor 70), and the Orchestrator targeted
+> **11.69% APY → `apy_bps = 1169`** — then the agent signed with its own key and
+> submitted on-chain with no human in the loop. The non-round `1169` follows
+> directly from the real 3.69% rate.
 
 ---
 
@@ -42,6 +42,8 @@ Built for the **Casper Agentic Buildathon 2026**.
 | ⚙️ Execution | Signs & submits rebalances to HeliosVault |
 
 The loop: **scout → score → rebalance**, repeated under policy constraints.
+Shared logic lives in `agent/helios-core.mjs` and is reused by both the
+autonomous runner and the MCP server.
 
 ---
 
@@ -49,16 +51,16 @@ The loop: **scout → score → rebalance**, repeated under policy constraints.
 
 A headless Node process — **no browser, no wallet popup, no button**:
 
-1. **Scout** fetches live US Treasury average interest rates (reference for
-   tokenized T-bills / RWA) from `api.fiscaldata.treasury.gov`.
+1. **Scout** fetches live US Treasury average interest rates from
+   `api.fiscaldata.treasury.gov`.
 2. **Risk Oracle** derives a risk/quality score from the real term structure
-   (T-Notes vs T-Bills spread) against the on-chain policy floor. Optional
-   `X402_URL` plugs in a paid data feed via the CSPR x402 facilitator.
+   against the on-chain policy floor (optional `X402_URL` plugs in a paid feed
+   via the CSPR x402 facilitator).
 3. **Orchestrator** combines the real risk-free rate with a modeled RWA credit
    premium into a target APY.
 4. **Execution** loads the agent key from PEM, builds a
    `record_rebalance(apy_bps, risk_score)` transaction with `casper-js-sdk`,
-   signs it, and submits it to the network via **CSPR.cloud** JSON-RPC.
+   signs it, and submits via **CSPR.cloud** JSON-RPC.
 
 Run it:
 
@@ -66,8 +68,32 @@ Run it:
     npm i casper-js-sdk@5
     node swarm.mjs
 
-Optional: `X402_URL=<paid-feed>` to enable x402 data purchase, `LOOP=1` to run
-on an interval.
+---
+
+## 🔌 MCP server (`agent/mcp-server.mjs`)
+
+Helios exposes its agent capabilities over the **Model Context Protocol**, so any
+MCP-compatible client (Claude Desktop, Cursor, MCP Inspector, …) can drive the
+protocol directly. It is a **zero-dependency** stdio JSON-RPC 2.0 server.
+
+| Tool | Gas | Description |
+|------|-----|-------------|
+| `helios_scout` | none | Live US Treasury yields (RWA risk-free benchmark) |
+| `helios_analyze` | none | Scout → risk score vs policy → target APY (bps) |
+| `helios_rebalance` | on-chain* | `record_rebalance` on HeliosVault |
+
+\* `helios_rebalance` accepts `dry_run: true` to sign locally without sending (no gas).
+
+Add to your MCP client config:
+
+    {
+      "mcpServers": {
+        "helios": {
+          "command": "node",
+          "args": ["/absolute/path/to/Helios-Protocol/agent/mcp-server.mjs"]
+        }
+      }
+    }
 
 ---
 
@@ -89,10 +115,10 @@ The vault enforces a policy the user commits on-chain:
 
 - **Smart contracts:** Odra (Rust) → HeliosVault, deployed on Casper Testnet
 - **Autonomous runner:** Node + casper-js-sdk v5, live US Treasury data feed
+- **MCP:** zero-dependency Model Context Protocol server (stdio)
 - **Wallet & auth:** CSPR.click (web app)
 - **RPC:** CSPR.cloud JSON-RPC
 - **Paid data:** x402 (CSPR facilitator)
-- **Agent layer:** TypeScript swarm (+ MCP)
 
 ---
 
@@ -104,7 +130,7 @@ Web app:
     cd Helios-Protocol
     npx serve .
 
-Autonomous agent: see **Autonomous agent runner** above.
+Autonomous agent / MCP server: see the sections above.
 
 ---
 
