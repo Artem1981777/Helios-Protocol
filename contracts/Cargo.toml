@@ -43,3 +43,9 @@ test = false
 [profile.release]
 codegen-units = 1
 lto = true
+
+[[bin]]
+name = "reputation_on_livenet"
+path = "src/bin/reputation_on_livenet.rs"
+required-features = ["livenet"]
+test = false

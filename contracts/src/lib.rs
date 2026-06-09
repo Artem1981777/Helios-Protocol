@@ -303,3 +303,183 @@ mod tests {
         assert_eq!(result, Err(VaultError::PolicyNotSet.into()));
     }
 }
+
+// ============================================================================
+//  Helios Yield Passport — on-chain soulbound reputation registry for agents.
+//  Each agent builds its OWN passport by recording decisions; reputation is the
+//  average policy-weighted APY (bps) across its on-chain decision history.
+//  There is no transfer entrypoint, so passports are soulbound by construction.
+// ============================================================================
+
+/// Decisions at or above this risk floor count at full weight; riskier decisions
+/// count at half weight. Mirrors the HeliosVault policy floor.
+const RISK_FLOOR: u8 = 70;
+
+/// A soulbound reputation passport for a single agent.
+#[odra::odra_type]
+#[derive(Default)]
+pub struct Passport {
+    /// Sequential passport id (1-based). 0 means "not minted yet".
+    pub token_id: u64,
+    /// Number of decisions recorded by this agent.
+    pub decisions: u64,
+    /// Running sum of policy-weighted APY (bps) across all decisions.
+    pub score_sum: u64,
+    /// Reputation = score_sum / decisions (average policy-weighted APY in bps).
+    pub reputation: u64,
+    /// Last reported APY (bps).
+    pub last_apy_bps: u32,
+    /// Last reported risk score.
+    pub last_risk_score: u8,
+}
+
+#[odra::event]
+pub struct PassportMinted {
+    pub agent: Address,
+    pub token_id: u64,
+}
+
+#[odra::event]
+pub struct DecisionRecorded {
+    pub agent: Address,
+    pub apy_bps: u32,
+    pub risk_score: u8,
+    pub decisions: u64,
+    pub reputation: u64,
+}
+
+#[odra::module(events = [PassportMinted, DecisionRecorded])]
+pub struct ReputationRegistry {
+    passport_count: Var<u64>,
+    passports: Mapping<Address, Passport>,
+    last_reputation: Var<u64>,
+}
+
+#[odra::module]
+impl ReputationRegistry {
+    pub fn init(&mut self) {
+        self.passport_count.set(0);
+        self.last_reputation.set(0);
+    }
+
+    /// Record one agent decision. The caller builds its OWN soulbound passport;
+    /// a passport is minted automatically on the first decision.
+    pub fn record_decision(&mut self, apy_bps: u32, risk_score: u8) {
+        let agent = self.env().caller();
+        let mut p = self.passports.get(&agent).unwrap_or_default();
+
+        if p.token_id == 0 {
+            let next = self.passport_count.get_or_default() + 1;
+            self.passport_count.set(next);
+            p.token_id = next;
+            self.env().emit_event(PassportMinted { agent, token_id: next });
+        }
+
+        let weighted = if risk_score >= RISK_FLOOR {
+            apy_bps as u64
+        } else {
+            (apy_bps as u64) / 2
+        };
+
+        p.decisions += 1;
+        p.score_sum += weighted;
+        p.reputation = p.score_sum / p.decisions;
+        p.last_apy_bps = apy_bps;
+        p.last_risk_score = risk_score;
+
+        let decisions = p.decisions;
+        let reputation = p.reputation;
+        self.passports.set(&agent, p);
+        self.last_reputation.set(reputation);
+
+        self.env().emit_event(DecisionRecorded {
+            agent,
+            apy_bps,
+            risk_score,
+            decisions,
+            reputation,
+        });
+    }
+
+    // ----------------------------- views -----------------------------
+
+    pub fn passport_of(&self, agent: &Address) -> Passport {
+        self.passports.get(agent).unwrap_or_default()
+    }
+
+    pub fn reputation_of(&self, agent: &Address) -> u64 {
+        self.passports.get(agent).unwrap_or_default().reputation
+    }
+
+    pub fn is_registered(&self, agent: &Address) -> bool {
+        self.passports.get(agent).unwrap_or_default().token_id != 0
+    }
+
+    /// Hiring gate for other protocols / the x402 layer: does this agent clear a
+    /// minimum reputation bar?
+    pub fn meets_threshold(&self, agent: &Address, min_reputation: u64) -> bool {
+        self.reputation_of(agent) >= min_reputation
+    }
+
+    pub fn total_passports(&self) -> u64 {
+        self.passport_count.get_or_default()
+    }
+
+    pub fn last_reputation(&self) -> u64 {
+        self.last_reputation.get_or_default()
+    }
+}
+
+#[cfg(test)]
+mod reputation_tests {
+    use super::*;
+    use odra::host::{Deployer, HostEnv, HostRef, NoArgs};
+
+    fn setup() -> (HostEnv, ReputationRegistryHostRef) {
+        let env = odra_test::env();
+        let reg = ReputationRegistry::deploy(&env, NoArgs);
+        (env, reg)
+    }
+
+    #[test]
+    fn mints_passport_on_first_decision() {
+        let (env, mut reg) = setup();
+        let agent = env.get_account(1);
+        env.set_caller(agent);
+        reg.record_decision(1169, 81);
+        assert_eq!(reg.total_passports(), 1);
+        assert!(reg.is_registered(&agent));
+        let p = reg.passport_of(&agent);
+        assert_eq!(p.token_id, 1);
+        assert_eq!(p.decisions, 1);
+        assert_eq!(p.reputation, 1169); // full weight: risk 81 >= 70
+    }
+
+    #[test]
+    fn averages_weighted_apy_and_penalizes_risky() {
+        let (env, mut reg) = setup();
+        let agent = env.get_account(1);
+        env.set_caller(agent);
+        reg.record_decision(1000, 80); // full  -> 1000
+        reg.record_decision(800, 50);  // half  -> 400
+        // score_sum 1400 / 2 decisions -> reputation 700
+        assert_eq!(reg.reputation_of(&agent), 700);
+        assert_eq!(reg.last_reputation(), 700);
+    }
+
+    #[test]
+    fn separate_passports_per_agent() {
+        let (env, mut reg) = setup();
+        let a = env.get_account(1);
+        let b = env.get_account(2);
+        env.set_caller(a);
+        reg.record_decision(1100, 75);
+        env.set_caller(b);
+        reg.record_decision(1200, 90);
+        assert_eq!(reg.total_passports(), 2);
+        assert_eq!(reg.passport_of(&a).token_id, 1);
+        assert_eq!(reg.passport_of(&b).token_id, 2);
+        assert!(reg.meets_threshold(&b, 1000));
+        assert!(!reg.meets_threshold(&a, 2000));
+    }
+}
