@@ -1,2 +1,5 @@
 [[contracts]]
 fqn = "helios_vault::HeliosVault"
+
+[[contracts]]
+fqn = "helios_vault::ReputationRegistry"

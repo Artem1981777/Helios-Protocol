@@ -6,14 +6,13 @@
 
 use helios_vault::ReputationRegistry;
 use odra::prelude::Addressable;
-use odra::host::HostRef;
 use odra::host::{Deployer, NoArgs};
 
 fn main() {
     let env = odra_casper_livenet_env::env();
 
     // ---- 1. Deploy the registry (most expensive call) ---------------------
-    env.set_gas(450_000_000_000u64);
+    env.set_gas(600_000_000_000u64);
     let mut reg = ReputationRegistry::deploy(&env, NoArgs);
     println!("\nReputationRegistry deployed at: {}", reg.address().to_string());
 
