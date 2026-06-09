@@ -4,7 +4,7 @@ const { SessionBuilder, Args, CLValue, PrivateKey, KeyAlgorithm, HttpHandler, Rp
 
 const HOME = process.env.HOME;
 const RPC  = 'https://node.testnet.cspr.cloud/rpc';
-const TOKEN= '***REMOVED***';
+const TOKEN= process.env.CSPR_CLOUD_AUTH_TOKEN;
 const CHAIN= 'casper-test';
 const WASM = HOME + '/Helios-Protocol/contracts/wasm/ReputationRegistry.wasm';
 const KEY  = HOME + '/keys/secret_key.pem';
