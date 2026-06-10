@@ -179,3 +179,19 @@ The EIP-712 engine in `agent/x402.mjs` is verified **bit-exact** against the off
 - Server forwards the payload to the facilitator `/verify`; on `isValid` it returns the gated signal.
 
 > `/settle` (on-chain CEP-18 `transfer_with_authorization`) is wired through the same facilitator and requires the agent to hold the x402 CEP-18 token balance. `/verify` needs no balance and is the cryptographic proof of a valid payment authorization.
+
+### Reputation-gated hiring (`hire`)
+
+Helios closes the loop between **payments** and **on-chain reputation**: before an agent is paid through x402, the resource server verifies that the *provider* agent meets a minimum reputation read **live from chain** — the same `ReputationRegistry` passport the autonomous swarm writes to. Reputation is decoded straight from the contract's CES event stream (no indexer, no trusted middle layer), and is the exact value shown on the dashboard's **Yield Passport** card.
+
+    $ node agent/x402.mjs hire 1000
+    → provider reputation 1169 ≥ 1000 → PASS → x402 402 → settle → 200
+
+    $ node agent/x402.mjs hire 2000
+    → provider reputation 1169 < 2000 → BLOCKED (exit 2), no payment
+
+On success the `200` response carries the provider's on-chain provenance, so the payer can audit **why** the agent was trusted:
+
+    "provider": { "reputation": 1169, "passport": 1, "decisions": 2 }
+
+> Payments are gated by **provable, on-chain** reputation written by the agent itself via [`record_decision`](https://testnet.cspr.live/transaction/3c6b7da9485f33c8c1891799fc5923c8976e0bc3438744356ef89f5882a896bc) — not by an off-chain score.
