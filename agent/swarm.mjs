@@ -9,7 +9,7 @@ const CFG = {
   CHAIN: process.env.HELIOS_CHAIN || 'casper-test',
   KEY_PATH: process.env.HELIOS_KEY || '/data/data/com.termux/files/home/keys/secret_key.pem',
   RPC_URL: process.env.RPC_URL || 'https://node.testnet.cspr.cloud/rpc',
-  TOKEN: process.env.CSPR_CLOUD_TOKEN || '***REMOVED***',
+  TOKEN: process.env.CSPR_CLOUD_AUTH_TOKEN || process.env.CSPR_CLOUD_TOKEN || '',
   X402_URL: process.env.X402_URL || '',
   LOOP: process.env.LOOP === '1',
   CYCLE_MS: parseInt(process.env.CYCLE_MS || '300000', 10),
