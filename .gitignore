@@ -1,2 +1,7 @@
 .vercel
 agent/node_modules
+
+.env.local
+contracts/.env.casper-test
+contracts/*.log
+*.log
