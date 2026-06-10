@@ -6,10 +6,11 @@ const { PrivateKey, KeyAlgorithm, ContractCallBuilder, Args, CLValue, RpcClient,
 
 export const CFG = {
   PKG: process.env.PKG || 'f21eb828df55867867bdc91adf1658b315fd1caecde9b601481e3ab32c6af872',
+  REP_PKG: process.env.REP_PKG || 'c49efa353ff058fbbbd960cb742b6711e09ce25cdc3d0e0857aac13d8ad0b716',
   CHAIN: process.env.CHAIN || 'casper-test',
   KEY_PATH: process.env.KEY_PATH || '/data/data/com.termux/files/home/keys/secret_key.pem',
   RPC_URL: process.env.RPC_URL || 'https://node.testnet.cspr.cloud/rpc',
-  TOKEN: process.env.TOKEN || '***REMOVED***',
+  TOKEN: process.env.CSPR_CLOUD_AUTH_TOKEN || process.env.TOKEN || '',
   X402_URL: process.env.X402_URL || '',
 };
 
@@ -90,11 +91,41 @@ export async function execute(apyBps, risk, opts) {
   return { dryRun: false, signer, apyBps, risk, txHash: String(hash), explorer: 'https://testnet.cspr.live/transaction/' + hash };
 }
 
+export async function recordReputation(apyBps, risk, opts) {
+  const dryRun = opts && opts.dryRun === true;
+  const pem = readFileSync(CFG.KEY_PATH, 'utf8');
+  const sk = await PrivateKey.fromPem(pem, KeyAlgorithm.ED25519);
+  const signer = sk.publicKey.toHex();
+  if (dryRun) {
+    return { dryRun: true, signer, apyBps, risk, contract: 'ReputationRegistry', note: 'signed locally, not submitted (no gas)' };
+  }
+  const tx = new ContractCallBuilder()
+    .from(sk.publicKey)
+    .byPackageHash(CFG.REP_PKG)
+    .entryPoint('record_decision')
+    .runtimeArgs(Args.fromMap({
+      apy_bps: CLValue.newCLUInt32(apyBps),
+      risk_score: CLValue.newCLUint8(risk),
+    }))
+    .chainName(CFG.CHAIN)
+    .payment(5000000000, 5)
+    .build();
+  tx.sign(sk);
+  const handler = new HttpHandler(CFG.RPC_URL);
+  handler.setCustomHeaders({ Authorization: CFG.TOKEN });
+  const rpc = new RpcClient(handler);
+  const res = await rpc.putTransaction(tx);
+  let hash = res.transactionHash || res.transaction_hash || res.hash;
+  if (hash && typeof hash === 'object' && hash.toHex) hash = hash.toHex();
+  return { dryRun: false, signer, apyBps, risk, contract: 'ReputationRegistry', txHash: String(hash), explorer: 'https://testnet.cspr.live/transaction/' + hash };
+}
+
 export async function cycle(opts) {
   const dryRun = opts && opts.dryRun === true;
   const y = await scout();
   const o = await riskOracle(y);
   const d = decide(y);
   const ex = await execute(d.apyBps, o.risk, { dryRun });
-  return { yields: y, oracle: o, decision: d, execution: ex };
+  const rep = await recordReputation(d.apyBps, o.risk, { dryRun });
+  return { yields: y, oracle: o, decision: d, execution: ex, reputation: rep };
 }
