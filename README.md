@@ -22,6 +22,9 @@ Built for the **Casper Agentic Buildathon 2026**.
 | `record_rebalance` — in-app deposit (CSPR.click) | `7b9acb90…d8244` | [view](https://testnet.cspr.live/transaction/7b9acb9065d1e737f90b487276ef5424d6b6ff433821ff904f845541b72d8244) |
 | `record_rebalance` — in-app swarm cycle (browser) | `e66b9283…6aee4` | [view](https://testnet.cspr.live/transaction/e66b9283210096eb7d0037eeb5261b03fc28c6a1dc04461e28b232cd6416aee4) |
 | `record_rebalance` — **fully autonomous agent (swarm)** | `4369d0d5…5352` | [view](https://testnet.cspr.live/transaction/4369d0d5b63a3040bacaafe172476acf3b57d88d8c0b3ee8dbc9d9caf92f5352) |
+| ReputationRegistry contract package | `c49efa…0b716` | [view](https://testnet.cspr.live/contract-package/c49efa353ff058fbbbd960cb742b6711e09ce25cdc3d0e0857aac13d8ad0b716) |
+| ReputationRegistry **install** — odra-free (casper-js-sdk over RPC) | `704199…015174` | [view](https://testnet.cspr.live/transaction/704199166a4a9537c5ce9c6491ccdc6e70062b99dfd06d23f1644e1309015174) |
+| `record_decision` — **autonomous agent → on-chain reputation passport** | `3c6b7d…896bc` | [view](https://testnet.cspr.live/transaction/3c6b7da9485f33c8c1891799fc5923c8976e0bc3438744356ef89f5882a896bc) |
 
 > **Genuinely data-driven.** In the autonomous run, the Yield Scout pulled live
 > US Treasury rates (T-Bills **3.69%**), the Risk Oracle scored the term
