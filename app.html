@@ -175,6 +175,7 @@ textarea.field{min-height:96px;line-height:1.55}
       <div class="card stat"><div class="lab">⊹ Blended APY</div><div class="val"><span id="apy">0.0</span>%</div><div class="sub2"><span class="up" id="apyTrend">—</span></div></div>
       <div class="card stat"><div class="lab">⛨ Risk Score</div><div class="val"><span id="risk">—</span><span style="font-size:15px;color:var(--dim)">/100</span></div><div class="sub2">within policy</div></div>
       <div class="card stat"><div class="lab">⬡ Rebalances</div><div class="val"><span id="rebs">0</span></div><div class="sub2">on Casper Testnet</div></div>
+      <div class="card stat"><div class="lab">🛡️ Agent Reputation</div><div class="val"><span id="rep">—</span></div><div class="sub2" id="repSub">on-chain Yield Passport</div></div>
     </div>
 
     <div class="grid-main">
@@ -304,6 +305,23 @@ function pushLog(ic,t,title,m){const d=document.createElement('div');d.className
 const ambient=[['🔭','t-cyan','Yield Scout scanning protocols','7 RWA pools monitored on Casper Testnet'],['🛡️','t-gold','Reputation updated by accuracy','Risk Oracle +0.4 · forecast confirmed'],['⚙️','t-green','Compliance buffer maintained','liquid CSPR within policy']];
 let ai=0,streamStarted=false;
 function startStream(){if(streamStarted)return;streamStarted=true;setInterval(()=>{if(!cycling){pushLog(...ambient[ai%ambient.length]);ai++;}},5200);}
+
+(function(){
+  async function loadPassport(){
+    try{
+      const r = await fetch('/reputation.json?t=' + Date.now(), { cache: 'no-store' });
+      if(!r.ok) return;
+      const d = await r.json();
+      const rep = document.getElementById('rep'); if(rep) rep.textContent = (d.reputation != null ? d.reputation : '—');
+      const sub = document.getElementById('repSub');
+      if(sub){
+        const ex = d.explorer || '#';
+        sub.innerHTML = 'Passport #' + (d.passport != null ? d.passport : '—') + ' · ' + (d.decisions != null ? d.decisions : 0) + ' decisions · <a href="' + ex + '" target="_blank" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold)">proof ↗</a>';
+      }
+    }catch(e){}
+  }
+  loadPassport();
+})();
 </script>
 <script src="csprclick.js?v=tn1"></script>
 <script src="deposit-fix.js?v=7"></script>
