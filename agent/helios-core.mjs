@@ -129,3 +129,61 @@ export async function cycle(opts) {
   const rep = await recordReputation(d.apyBps, o.risk, { dryRun });
   return { yields: y, oracle: o, decision: d, execution: ex, reputation: rep };
 }
+
+// ---- on-chain reputation read (ReputationRegistry via CES events) ----
+const REP_EVENTS_UREF = process.env.REP_EVENTS_UREF || 'uref-0b8f15d09ade09a157f3e1873970436fc04d06d54adf327e12952c39815fa9f9-007';
+const REP_EVENTS_LEN_UREF = process.env.REP_EVENTS_LEN_UREF || 'uref-2b4a5bcc7e37e0c51579d668376b8204a2a135f774353e66b0eb60465bdb5fa7-007';
+
+function clBytes(clv) {
+  const raw = JSON.parse(JSON.stringify(clv));
+  if (Array.isArray(raw)) return raw.map(Number);
+  if (raw && Array.isArray(raw.bytes)) return raw.bytes.map(Number);
+  if (typeof raw === 'string') { const m = raw.match(/.{1,2}/g) || []; return m.map((x) => parseInt(x, 16)); }
+  return [];
+}
+
+function decodeEvent(bytes) {
+  let o = 0;
+  const u32 = () => { const v = (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0; o += 4; return v; };
+  const u8v = () => { const v = bytes[o]; o += 1; return v; };
+  const u64 = () => { let v = 0n; for (let i = 0; i < 8; i++) v |= BigInt(bytes[o + i]) << BigInt(8 * i); o += 8; return v; };
+  const keyHex = () => { u8v(); let hx = ''; for (let i = 0; i < 32; i++) hx += bytes[o++].toString(16).padStart(2, '0'); return hx; };
+  const nameLen = u32();
+  let name = '';
+  for (let i = 0; i < nameLen; i++) name += String.fromCharCode(bytes[o++]);
+  const ev = { name };
+  if (name === 'event_DecisionRecorded') {
+    ev.agent = keyHex(); ev.apy_bps = u32(); ev.risk_score = u8v();
+    ev.decisions = Number(u64()); ev.reputation = Number(u64());
+  } else if (name === 'event_PassportMinted') {
+    ev.agent = keyHex(); ev.token_id = Number(u64());
+  }
+  return ev;
+}
+
+export async function reputationOf(agentHashHex) {
+  const agent = String(agentHashHex).replace(/^0x/, '').toLowerCase();
+  const handler = new HttpHandler(CFG.RPC_URL);
+  handler.setCustomHeaders({ Authorization: CFG.TOKEN });
+  const rpc = new RpcClient(handler);
+  const len = Number((await rpc.queryLatestGlobalState(REP_EVENTS_LEN_UREF)).storedValue.clValue);
+  let reputation = 0, decisions = 0, lastApy = null, lastRisk = null, registered = false, passport = null;
+  for (let i = 0; i < len; i++) {
+    const r = await rpc.getDictionaryItem(null, REP_EVENTS_UREF, String(i));
+    const ev = decodeEvent(clBytes(r.storedValue.clValue));
+    if (ev.agent !== agent) continue;
+    if (ev.name === 'event_PassportMinted') { registered = true; passport = ev.token_id; }
+    if (ev.name === 'event_DecisionRecorded') {
+      registered = true;
+      reputation = ev.reputation; decisions = ev.decisions;
+      lastApy = ev.apy_bps; lastRisk = ev.risk_score;
+    }
+  }
+  return { agent, registered, reputation, decisions, last_apy_bps: lastApy, last_risk_score: lastRisk, passport, contract: 'ReputationRegistry', source: 'on-chain CES events (casper-test)', events: len };
+}
+
+export async function meetsThreshold(agentHashHex, minReputation) {
+  const rep = await reputationOf(agentHashHex);
+  const min = Number(minReputation);
+  return { ...rep, minReputation: min, meets: rep.registered && rep.reputation >= min };
+}

@@ -3,12 +3,13 @@ import { createServer } from 'node:http'
 import { createPrivateKey, createPublicKey, sign as edSign, randomBytes } from 'node:crypto'
 import sha3 from 'js-sha3'
 import blakejs from 'blakejs'
-import { CFG, scout, riskOracle } from './helios-core.mjs'
+import { CFG, scout, riskOracle, reputationOf, meetsThreshold } from './helios-core.mjs'
 const { keccak256 } = sha3
 const { blake2b } = blakejs
 
 const FAC = 'https://x402-facilitator.cspr.cloud'
 const NETWORK = 'casper:casper-test'
+const MIN_REP = Number(process.env.MIN_REPUTATION || 1000)
 
 // ---- EIP-712 движок (сверен с casper-eip-712 tests/vectors.json) ----
 const u8  = (hex) => Uint8Array.from(Buffer.from(hex.replace(/^0x/, ''), 'hex'))
@@ -112,8 +113,9 @@ async function handle(req,res){
   const v = await facilitator('/verify', { paymentPayload, paymentRequirements:reqs })
   if(v.json && v.json.isValid===true){
     const signal = await premiumSignal()
+      const provider = await reputationOf(myHash).catch(e => ({ error: String(e) }))
     res.writeHead(200,{'content-type':'application/json','x-payment-response':Buffer.from(JSON.stringify({payer:v.json.payer})).toString('base64')})
-    res.end(JSON.stringify({ paid:true, payer:v.json.payer, signal }))
+    res.end(JSON.stringify({ paid:true, payer:v.json.payer, provider, signal }))
   } else {
     res.writeHead(402,{'content-type':'application/json'}); res.end(JSON.stringify({ x402Version:2, error:'invalid payment', facilitator:v.json }))
   }
@@ -140,13 +142,27 @@ async function demo(){
   console.log('[demo] OK — full x402 402->pay->200 loop verified by live CSPR.cloud facilitator')
 }
 
+async function hire(minRep){
+  const min = Number(minRep || MIN_REP)
+  console.log('[hire] provider agent account hash:', myHash)
+  const gate = await meetsThreshold(myHash, min)
+  console.log('[hire] on-chain reputation', gate.reputation, '| decisions', gate.decisions, '| passport #'+gate.passport, '| registered', gate.registered)
+  console.log('[hire] source:', gate.source, '| contract:', gate.contract)
+  console.log('[hire] threshold', min, '=>', gate.meets ? 'PASS - agent is hireable' : 'BLOCKED - reputation below threshold')
+  if(!gate.meets){ console.log('[hire] x402 payment refused: agent does not meet the reputation bar'); process.exit(2) }
+  console.log('[hire] reputation cleared - running gated x402 payment flow...')
+  if(!selftest()){ console.log('[x402] selftest FAILED'); process.exit(1) }
+  await demo()
+}
+
 const cmd = process.argv[2] || 'verify'
 console.log('[x402] signer pubkey :', pubHex)
 console.log('[x402] account hash  :', myHash)
 if(cmd==='supported'){ const r=await facilitator('/supported'); console.log('[/supported]',r.status,JSON.stringify(r.json,null,2)) }
 else if(cmd==='selftest'){ process.exit(selftest()?0:1) }
 else if(cmd==='serve'){ const p=Number(process.env.PORT||4021); await startServer(p); console.log('[x402] resource server on http://127.0.0.1:'+p+'/premium/treasury-signal') }
-else if(cmd==='demo'){ if(!selftest()){ console.log('[x402] selftest FAILED'); process.exit(1) } await demo() }
+else if(cmd==='hire'){ await hire(process.argv[3]) }
+  else if(cmd==='demo'){ if(!selftest()){ console.log('[x402] selftest FAILED'); process.exit(1) } await demo() }
 else {
   if(!selftest()){ console.log('[x402] selftest FAILED — не иду в сеть'); process.exit(1) }
   const b = buildSignedPayload()
