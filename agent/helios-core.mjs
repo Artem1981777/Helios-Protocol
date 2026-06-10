@@ -131,10 +131,10 @@ export async function cycle(opts) {
 }
 
 // ---- on-chain reputation read (ReputationRegistry via CES events) ----
-const REP_EVENTS_UREF = process.env.REP_EVENTS_UREF || 'uref-0b8f15d09ade09a157f3e1873970436fc04d06d54adf327e12952c39815fa9f9-007';
-const REP_EVENTS_LEN_UREF = process.env.REP_EVENTS_LEN_UREF || 'uref-2b4a5bcc7e37e0c51579d668376b8204a2a135f774353e66b0eb60465bdb5fa7-007';
+export const REP_EVENTS_UREF = process.env.REP_EVENTS_UREF || 'uref-0b8f15d09ade09a157f3e1873970436fc04d06d54adf327e12952c39815fa9f9-007';
+export const REP_EVENTS_LEN_UREF = process.env.REP_EVENTS_LEN_UREF || 'uref-2b4a5bcc7e37e0c51579d668376b8204a2a135f774353e66b0eb60465bdb5fa7-007';
 
-function clBytes(clv) {
+export function clBytes(clv) {
   const raw = JSON.parse(JSON.stringify(clv));
   if (Array.isArray(raw)) return raw.map(Number);
   if (raw && Array.isArray(raw.bytes)) return raw.bytes.map(Number);
@@ -142,7 +142,7 @@ function clBytes(clv) {
   return [];
 }
 
-function decodeEvent(bytes) {
+export function decodeEvent(bytes) {
   let o = 0;
   const u32 = () => { const v = (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0; o += 4; return v; };
   const u8v = () => { const v = bytes[o]; o += 1; return v; };

@@ -1,0 +1,21 @@
+{
+  "contract": "ReputationRegistry",
+  "source": "on-chain CES events (casper-test)",
+  "events": 3,
+  "agents": [
+    {
+      "agent": "f3fc45961e794fa0acd30ef0841e0f193521cbc68b83319dd9dec7cb13ea3987",
+      "registered": true,
+      "passport": 1,
+      "reputation": 1169,
+      "decisions": 2,
+      "lastApyBps": 1169,
+      "lastRiskScore": 81,
+      "name": "Helios Orchestrator",
+      "publicKey": "01e6bd20af8ddf77d4bb30ad2658b5ceecf8ce3bd94cf39eda523db786133f6434",
+      "explorer": "https://testnet.cspr.live/account/01e6bd20af8ddf77d4bb30ad2658b5ceecf8ce3bd94cf39eda523db786133f6434",
+      "rank": 1
+    }
+  ],
+  "updated": "2026-06-10T13:11:09.253Z"
+}
